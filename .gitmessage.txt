@@ -1,0 +1,26 @@
+﻿# ================================
+# Commit Message Convention
+# ================================
+
+# <type>(<scope>): <subject>
+#
+# type:
+#   feat     新功能
+#   fix      修复
+#   refactor 重构
+#   style    代码格式修改
+#   docs     文档修改
+#   chore    构建/工具相关
+#   test     测试相关
+#
+# scope:
+#   UI / Network / Core / Activity / Tool / etc.
+#
+# subject:
+#   简洁明确，不超过 50 字
+#
+# -------------------------------
+# 示例:
+# feat(UI): 新增活动界面倒计时组件
+# fix(Network): 修复下载带宽分配异常
+# ================================

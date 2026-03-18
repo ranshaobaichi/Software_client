@@ -1,0 +1,81 @@
+########################
+# Unity Generated
+########################
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild*/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+########################
+# IDE
+########################
+
+.vs/
+.vscode/
+
+# Rider / IntelliJ
+.idea/*
+!.idea/.gitignore
+!.idea/codeStyles/
+!.idea/codeStyles/**
+!.idea/inspectionProfiles/
+!.idea/inspectionProfiles/**
+!.idea/dictionaries/
+!.idea/dictionaries/**
+
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.sln.iml
+*.sln.DotSettings.user
+*.pidb
+*.booproj
+*.svd
+*.opendb
+*.VC.db
+*.ide
+
+########################
+# OS
+########################
+
+.DS_Store
+Thumbs.db
+
+########################
+# Unity / Build
+########################
+
+TestResults/
+.gradle/
+ExportedObj/
+ServerData/
+*.stacktrace
+*.dmp
+
+########################
+# Packages
+########################
+
+Packages/manifest.tmp
+
+########################
+# Exported Packages
+########################
+
+*.unitypackage
+
+########################
+# Misc
+########################
+
+sysinfo.txt
+Assets/TODO.md
