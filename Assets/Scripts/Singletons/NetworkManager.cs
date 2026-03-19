@@ -10,7 +10,7 @@ namespace Network {
     /// </summary>
     public class NetworkManager : MonoBehaviour {
         #region Singleton
-        private static NetworkManager s_instance;
+        private static volatile NetworkManager s_instance;
         private static readonly object s_instanceLock = new object();
 
         public static NetworkManager SInstance {
@@ -36,6 +36,7 @@ namespace Network {
 
         private readonly List<INetworkChannel> _channels = new List<INetworkChannel>();
         private readonly object _channelsLock = new object();
+        private readonly List<INetworkChannel> _pumpScratch = new List<INetworkChannel>();
 
         private readonly List<(INetworkChannel channel, float deadline, Action onTimeout)> _shortRequestPending =
                 new List<(INetworkChannel, float, Action)>();
@@ -215,13 +216,17 @@ namespace Network {
         /// Ensures that message handlers are invoked in a single-threaded context.
         /// </summary>
         private void PumpAll() {
-            List<INetworkChannel> copy;
             lock (_channelsLock) {
-                copy = new List<INetworkChannel>(_channels);
+                _pumpScratch.AddRange(_channels);
             }
 
-            foreach (var ch in copy)
-                ch.DispatchPendingMessages();
+            try {
+                foreach (var ch in _pumpScratch)
+                    ch.DispatchPendingMessages();
+            }
+            finally {
+                _pumpScratch.Clear();
+            }
         }
 
         private void DisconnectAll() {
