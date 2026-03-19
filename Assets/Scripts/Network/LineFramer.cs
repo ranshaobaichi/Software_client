@@ -36,6 +36,9 @@ namespace Network {
                 }
             }
 
+            // EOF reached — discard any partial line to prevent stale bytes from
+            // corrupting the next message after a reconnect.
+            _buffer.Clear();
             return false;
         }
 

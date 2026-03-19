@@ -10,7 +10,7 @@ namespace Network {
     /// Specific TCP channel implementation, using the long connection pattern
     /// </summary>
     public class TcpConnectionChannel : INetworkChannel {
-        public bool IsConnected => _running && _client?.Connected == true;
+        public bool IsConnected => Interlocked.CompareExchange(ref _connected, 0, 0) == 1 && _client?.Connected == true;
         public event Action OnConnected;
         public event Action OnDisconnected;
         
@@ -23,6 +23,8 @@ namespace Network {
         private Stream _stream;
         private Thread _receiveThread;
         private volatile bool _running;
+        // 1 = connected, 0 = not connected; use Interlocked to read-and-clear atomically
+        private int _connected;
         private readonly object _sendLock = new object();
 
         private readonly ConcurrentQueue<byte[]> _incoming = new ConcurrentQueue<byte[]>();
@@ -43,6 +45,7 @@ namespace Network {
                 _client = new TcpClient();
                 _client.Connect(_host, _port);
                 _stream = _client.GetStream();
+                _connected = 1;
                 _running = true;
                 _receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
                 _receiveThread.Start();
@@ -51,6 +54,7 @@ namespace Network {
             catch (Exception ex) {
                 Debug.LogError("[TcpConnectionChannel] Connect failed: " + ex.Message);
                 _running = false;
+                _connected = 0;
             }
         }
 
@@ -60,6 +64,7 @@ namespace Network {
         /// [Remember to set the channel variable to null after disconnection to avoid accidental reuse.]
         /// </summary>
         public void Disconnect() {
+            bool wasConnected = Interlocked.Exchange(ref _connected, 0) == 1;
             _running = false;
             try {
                 _client?.Close();
@@ -84,7 +89,8 @@ namespace Network {
 
             _stream = null;
             _client = null;
-            OnDisconnected?.Invoke();
+            if (wasConnected)
+                OnDisconnected?.Invoke();
         }
 
         /// <summary>
@@ -94,8 +100,8 @@ namespace Network {
         /// <param name="payload"></param>
         /// <typeparam name="T"></typeparam>
         public void Send<T>(T payload) where T : class {
-            if (_stream == null || _serializer == null) return;
             lock (_sendLock) {
+                if (_stream == null || _serializer == null) return;
                 try {
                     byte[] raw = _serializer.Serialize(payload);
                     if (raw != null)
@@ -169,7 +175,10 @@ namespace Network {
                     Debug.LogWarning("[TcpConnectionChannel] Receive error: " + ex.Message);
             }
             finally {
+                bool wasConnected = Interlocked.Exchange(ref _connected, 0) == 1;
                 _running = false;
+                if (wasConnected)
+                    OnDisconnected?.Invoke();
             }
         }
     }

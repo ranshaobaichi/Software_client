@@ -20,6 +20,10 @@ public class SimpleNetworkClient2D : MonoBehaviour {
     private readonly Dictionary<string, GameObject> _remoteObjects = new Dictionary<string, GameObject>();
     private readonly Dictionary<string, Vector3> _remoteTargets = new Dictionary<string, Vector3>();
 
+    // Shared sprite/texture for all remote players — created once, destroyed with this component.
+    private Texture2D _remotePlayerTexture;
+    private Sprite _remotePlayerSprite;
+
     private void Start() {
         _channel = NetworkManager.SInstance.CreateConnection(host, port);
         _channel.RegisterHandler<GameMessage>(OnMessage);
@@ -36,6 +40,22 @@ public class SimpleNetworkClient2D : MonoBehaviour {
     }
 
     private void OnDestroy() {
+        foreach (var kv in _remoteObjects) {
+            if (kv.Value != null)
+                Destroy(kv.Value);
+        }
+        _remoteObjects.Clear();
+        _remoteTargets.Clear();
+
+        if (_remotePlayerSprite != null) {
+            Destroy(_remotePlayerSprite);
+            _remotePlayerSprite = null;
+        }
+        if (_remotePlayerTexture != null) {
+            Destroy(_remotePlayerTexture);
+            _remotePlayerTexture = null;
+        }
+
         if (_channel != null) {
             NetworkManager.SInstance.RemoveConnection(_channel);
             _channel = null;
@@ -109,16 +129,22 @@ public class SimpleNetworkClient2D : MonoBehaviour {
         go.transform.position = pos;
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateSolidSprite(new Color(1f, 0.45f, 0.1f, 1f));
+        sr.sprite = GetOrCreateRemoteSprite();
         go.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
         return go;
     }
 
-    private Sprite CreateSolidSprite(Color color) {
-        Texture2D tex = new Texture2D(1, 1);
-        tex.SetPixel(0, 0, color);
-        tex.Apply();
-        Rect rect = new Rect(0, 0, 1, 1);
-        return Sprite.Create(tex, rect, new Vector2(0.5f, 0.5f), 1f);
+    private Sprite GetOrCreateRemoteSprite() {
+        if (_remotePlayerSprite != null) return _remotePlayerSprite;
+        _remotePlayerTexture = new Texture2D(1, 1);
+        _remotePlayerTexture.SetPixel(0, 0, new Color(1f, 0.45f, 0.1f, 1f));
+        _remotePlayerTexture.Apply();
+        _remotePlayerSprite = Sprite.Create(
+            _remotePlayerTexture,
+            new Rect(0, 0, 1, 1),
+            new Vector2(0.5f, 0.5f),
+            1f
+        );
+        return _remotePlayerSprite;
     }
 }
