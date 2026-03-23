@@ -2,11 +2,12 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Constants;
+using Network.Messages;
 
 namespace Network {
     /// <summary>
-    /// 全局网络单例：承担全部网络职责，支持多连接，每连接独立接收线程，主线程统一派发。
-    /// 不假定帧格式与序列化方式，通过可注入的 Framer/Serializer 扩展；客户端自行处理各连接时序。
+    /// Singleton manager for network connections.
     /// </summary>
     public class NetworkManager : MonoBehaviour {
         #region Singleton
@@ -133,14 +134,18 @@ namespace Network {
 
         /// <summary>
         /// Send a request and wait for a single response, using a short-lived connection.
+        /// Deserializes the server envelope (<see cref="ServerEnvelope"/>) first;
+        /// on success, the inner <c>data</c> JSON is deserialized as <typeparamref name="TResponse"/>;
+        /// on failure, <paramref name="onError"/> is called with the populated <see cref="ErrorResponse"/>.
         /// </summary>
         /// <typeparam name="TRequest">request type</typeparam>
-        /// <typeparam name="TResponse">response type</typeparam>
+        /// <typeparam name="TResponse">business payload type, carried in <c>ServerEnvelope.data</c></typeparam>
         public void SendShortRequest<TRequest, TResponse>(
                 string host,
                 int port,
                 TRequest request,
                 Action<TResponse> onResponse,
+                Action<ErrorResponse> onError = null,
                 float timeoutSeconds = 5f,
                 Action onTimeout = null,
                 IMessageFramer framer = null,
@@ -151,14 +156,41 @@ namespace Network {
             var f = framer ?? _defaultFramer ?? new LineFramer();
             var s = serializer ?? _defaultSerializer ?? new JsonMessageSerializer();
             var ch = new TcpConnectionChannel(host, port, f, s);
+            onTimeout ??= DefaultOnTimeoutAction;
 
-            ch.RegisterHandler<TResponse>(resp => {
-                lock (_shortRequestLock) {
-                    RemoveShortRequestPending(ch);
+            ch.RegisterHandler<ServerEnvelope>(envelope => {
+                try {
+                    lock (_shortRequestLock) {
+                        RemoveShortRequestPending(ch);
+                    }
+
+                    if (envelope.status) {
+                        try {
+                            if (string.IsNullOrEmpty(envelope.data)) {
+                                envelope.data = "{}";
+                            }
+                            byte[] dataBytes = System.Text.Encoding.UTF8.GetBytes(envelope.data);
+                            var resp = s.Deserialize(dataBytes, typeof(TResponse)) as TResponse;
+                            onResponse?.Invoke(resp);
+                        }
+                        catch (Exception ex) {
+                            onError?.Invoke(new ErrorResponse {
+                                status    = false,
+                                errorCode = (int) NetworkConstants.ErrorCode.CLIENT_DESERIALIZE_ERROR,
+                                message   = ex.Message
+                            });
+                        }
+                    } else {
+                        onError?.Invoke(new ErrorResponse {
+                            status    = false,
+                            errorCode = envelope.errorCode,
+                            message   = envelope.message
+                        });
+                    }
                 }
-
-                onResponse?.Invoke(resp);
-                RemoveConnection(ch);
+                finally {
+                    RemoveConnection(ch);
+                }
             });
 
             lock (_channelsLock) {
@@ -235,6 +267,10 @@ namespace Network {
                     ch.Disconnect();
                 _channels.Clear();
             }
+        }
+
+        private void DefaultOnTimeoutAction() {
+            Debug.Log("[NetworkManager] Default Action On Timeout");
         }
     }
 }
