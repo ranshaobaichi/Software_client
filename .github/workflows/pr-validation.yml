@@ -1,0 +1,44 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  validate-pr:
+    name: Validate Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check PR title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          if [ -z "$PR_TITLE" ]; then
+            echo "::error::PR 标题不能为空"
+            exit 1
+          fi
+          echo "PR 标题检查通过"
+
+      - name: Check branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+          if echo "$BRANCH" | grep -qE '^(feature|fix|docs|refactor|test|chore)/'; then
+            echo "分支命名规范检查通过: $BRANCH"
+          else
+            echo "::warning::建议分支命名遵循规范：feature/xxx、fix/xxx、docs/xxx、refactor/xxx 等"
+          fi
+
+      - name: Verify target branch is dev
+        run: |
+          TARGET="${{ github.base_ref }}"
+          echo "Target branch: $TARGET"
+          if [ "$TARGET" != "dev" ]; then
+            echo "::error::PR 目标分支必须是 dev，当前目标分支为 $TARGET"
+            exit 1
+          fi
+          echo "目标分支检查通过"
