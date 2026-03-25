@@ -12,12 +12,12 @@ namespace Network {
     public class NetworkManager : MonoBehaviour {
         #region Singleton
         private static volatile NetworkManager s_instance;
-        private static readonly object s_instanceLock = new object();
+        private static readonly object InstanceLock = new object();
 
         public static NetworkManager SInstance {
             get {
                 if (s_instance == null) {
-                    lock (s_instanceLock) {
+                    lock (InstanceLock) {
                         if (s_instance == null) {
                             var go = new GameObject("[NetworkManager]");
                             s_instance = go.AddComponent<NetworkManager>();
@@ -32,17 +32,17 @@ namespace Network {
         #endregion
 
         #region Fields
-        private IMessageFramer _defaultFramer;
-        private IMessageSerializer _defaultSerializer;
+        private IMessageFramer m_defaultFramer;
+        private IMessageSerializer m_defaultSerializer;
 
-        private readonly List<INetworkChannel> _channels = new List<INetworkChannel>();
-        private readonly object _channelsLock = new object();
-        private readonly List<INetworkChannel> _pumpScratch = new List<INetworkChannel>();
+        private readonly List<INetworkChannel> m_channels = new();
+        private readonly object m_channelsLock = new();
+        private readonly List<INetworkChannel> m_pumpScratch = new();
 
-        private readonly List<(INetworkChannel channel, float deadline, Action onTimeout)> _shortRequestPending =
-                new List<(INetworkChannel, float, Action)>();
+        private readonly List<(INetworkChannel channel, float deadline, Action onTimeout)> m_shortRequestPending =
+                new();
 
-        private readonly object _shortRequestLock = new object();
+        private readonly object m_shortRequestLock = new();
         #endregion
 
         #region Unity Lifecycle
@@ -54,8 +54,8 @@ namespace Network {
 
             s_instance = this;
             DontDestroyOnLoad(gameObject);
-            _defaultFramer ??= new LineFramer();
-            _defaultSerializer ??= new JsonMessageSerializer();
+            m_defaultFramer ??= new LineFramer();
+            m_defaultSerializer ??= new JsonMessageSerializer();
         }
 
         private void OnDestroy() {
@@ -80,11 +80,11 @@ namespace Network {
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         ) {
-            var framerToUse = framer ?? _defaultFramer ?? new LineFramer();
-            var serializerToUse = serializer ?? _defaultSerializer ?? new JsonMessageSerializer();
+            var framerToUse = framer ?? m_defaultFramer ?? new LineFramer();
+            var serializerToUse = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();
             var channel = new TcpConnectionChannel(host, port, framerToUse, serializerToUse);
-            lock (_channelsLock) {
-                _channels.Add(channel);
+            lock (m_channelsLock) {
+                m_channels.Add(channel);
             }
 
             return channel;
@@ -98,11 +98,11 @@ namespace Network {
         public void RemoveConnection(INetworkChannel channel) {
             if (channel == null) return;
             channel.Disconnect();
-            lock (_channelsLock) {
-                _channels.Remove(channel);
+            lock (m_channelsLock) {
+                m_channels.Remove(channel);
             }
         }
-        
+
         #region Short Connection Utilities
         /// <summary>
         /// Send a single message to the specified host/port using a short-lived connection.
@@ -114,8 +114,8 @@ namespace Network {
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         ) where T : class {
-            var f = framer ?? _defaultFramer ?? new LineFramer();
-            var s = serializer ?? _defaultSerializer ?? new JsonMessageSerializer();
+            var f = framer ?? m_defaultFramer ?? new LineFramer();
+            var s = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();
             ThreadPool.QueueUserWorkItem(_ => {
                 try {
                     var ch = new TcpConnectionChannel(host, port, f, s);
@@ -153,14 +153,14 @@ namespace Network {
         )
                 where TRequest : class
                 where TResponse : class {
-            var f = framer ?? _defaultFramer ?? new LineFramer();
-            var s = serializer ?? _defaultSerializer ?? new JsonMessageSerializer();
+            var f = framer ?? m_defaultFramer ?? new LineFramer();
+            var s = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();
             var ch = new TcpConnectionChannel(host, port, f, s);
             onTimeout ??= DefaultOnTimeoutAction;
 
             ch.RegisterHandler<ServerEnvelope>(envelope => {
                 try {
-                    lock (_shortRequestLock) {
+                    lock (m_shortRequestLock) {
                         RemoveShortRequestPending(ch);
                     }
 
@@ -169,22 +169,24 @@ namespace Network {
                             if (string.IsNullOrEmpty(envelope.data)) {
                                 envelope.data = "{}";
                             }
+
                             byte[] dataBytes = System.Text.Encoding.UTF8.GetBytes(envelope.data);
                             var resp = s.Deserialize(dataBytes, typeof(TResponse)) as TResponse;
                             onResponse?.Invoke(resp);
                         }
                         catch (Exception ex) {
                             onError?.Invoke(new ErrorResponse {
-                                status    = false,
-                                errorCode = (int) NetworkConstants.ErrorCode.CLIENT_DESERIALIZE_ERROR,
-                                message   = ex.Message
+                                    status = false,
+                                    errorCode = (int)NetworkConstants.ErrorCode.CLIENT_DESERIALIZE_ERROR,
+                                    message = ex.Message
                             });
                         }
-                    } else {
+                    }
+                    else {
                         onError?.Invoke(new ErrorResponse {
-                            status    = false,
-                            errorCode = envelope.errorCode,
-                            message   = envelope.message
+                                status = false,
+                                errorCode = envelope.errorCode,
+                                message = envelope.message
                         });
                     }
                 }
@@ -193,12 +195,12 @@ namespace Network {
                 }
             });
 
-            lock (_channelsLock) {
-                _channels.Add(ch);
+            lock (m_channelsLock) {
+                m_channels.Add(ch);
             }
 
-            lock (_shortRequestLock) {
-                _shortRequestPending.Add((ch, Time.time + timeoutSeconds, onTimeout));
+            lock (m_shortRequestLock) {
+                m_shortRequestPending.Add((ch, Time.time + timeoutSeconds, onTimeout));
             }
 
             ch.Connect();
@@ -206,19 +208,19 @@ namespace Network {
                 ch.Send(request);
             else {
                 RemoveConnection(ch);
-                lock (_shortRequestLock) {
+                lock (m_shortRequestLock) {
                     RemoveShortRequestPending(ch);
                 }
 
-                onTimeout?.Invoke();
+                onTimeout.Invoke();
             }
         }
         #endregion
 
         private void RemoveShortRequestPending(INetworkChannel ch) {
-            for (int i = _shortRequestPending.Count - 1; i >= 0; i--) {
-                if (_shortRequestPending[i].channel == ch) {
-                    _shortRequestPending.RemoveAt(i);
+            for (int i = m_shortRequestPending.Count - 1; i >= 0; i--) {
+                if (m_shortRequestPending[i].channel == ch) {
+                    m_shortRequestPending.RemoveAt(i);
                     return;
                 }
             }
@@ -227,12 +229,12 @@ namespace Network {
         private void PruneShortRequestTimeouts() {
             float now = Time.time;
             List<(INetworkChannel ch, Action onTimeout)> toRemove = null;
-            lock (_shortRequestLock) {
-                for (int i = _shortRequestPending.Count - 1; i >= 0; i--) {
-                    if (now < _shortRequestPending[i].deadline) continue;
+            lock (m_shortRequestLock) {
+                for (int i = m_shortRequestPending.Count - 1; i >= 0; i--) {
+                    if (now < m_shortRequestPending[i].deadline) continue;
                     if (toRemove == null) toRemove = new List<(INetworkChannel, Action)>();
-                    toRemove.Add((_shortRequestPending[i].channel, _shortRequestPending[i].onTimeout));
-                    _shortRequestPending.RemoveAt(i);
+                    toRemove.Add((m_shortRequestPending[i].channel, m_shortRequestPending[i].onTimeout));
+                    m_shortRequestPending.RemoveAt(i);
                 }
             }
 
@@ -242,30 +244,30 @@ namespace Network {
                 RemoveConnection(item.Item1);
             }
         }
-        
+
         /// <summary>
         /// Called by Update() on the main thread, dispatches pending messages for all channels.
         /// Ensures that message handlers are invoked in a single-threaded context.
         /// </summary>
         private void PumpAll() {
-            lock (_channelsLock) {
-                _pumpScratch.AddRange(_channels);
+            lock (m_channelsLock) {
+                m_pumpScratch.AddRange(m_channels);
             }
 
             try {
-                foreach (var ch in _pumpScratch)
+                foreach (var ch in m_pumpScratch)
                     ch.DispatchPendingMessages();
             }
             finally {
-                _pumpScratch.Clear();
+                m_pumpScratch.Clear();
             }
         }
 
         private void DisconnectAll() {
-            lock (_channelsLock) {
-                foreach (var ch in _channels)
+            lock (m_channelsLock) {
+                foreach (var ch in m_channels)
                     ch.Disconnect();
-                _channels.Clear();
+                m_channels.Clear();
             }
         }
 
