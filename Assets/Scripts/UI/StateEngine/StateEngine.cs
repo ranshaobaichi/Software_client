@@ -13,23 +13,24 @@ namespace UI.StateEngine {
     }
 
     public class StateEngine : MonoBehaviour, IStateEngine {
-        public bool IsEmpty => m_stack.Count == 0;
-        public int Count => m_stack.Count;
+        public bool isEmpty => m_stack.Count == 0;
+        public int count => m_stack.Count;
 
         [SerializeField]
         private StateRegistration _initState;
 
         [SerializeField]
-        private List<StateRegistration> _registrations = new();
+        private List<StateRegistration> _registrations = new List<StateRegistration>();
 
-        private readonly Stack<StateBase> m_stack = new();
-        private readonly Dictionary<Type, StateBase> m_stateCache = new();
+        private readonly Stack<StateBase> m_stack = new Stack<StateBase>();
+        private readonly Dictionary<Type, StateBase> m_stateCache = new Dictionary<Type, StateBase>();
         private bool m_busy;
 
         private IStateLifecycleNotifier m_notifier;
 
         // outside key: toType, inside key: fromType, value: message
-        private readonly Dictionary<Type, Dictionary<Type, object>> m_statesMessages = new();
+        private readonly Dictionary<Type, Dictionary<Type, object>> m_statesMessages =
+                new Dictionary<Type, Dictionary<Type, object>>();
 
         private void Start() {
             // set notifier for debug
@@ -86,24 +87,30 @@ namespace UI.StateEngine {
         }
 
         #region IStateEngine Implementation
-        public void AddTop<T>() where T : StateBase {
+        public bool AddTop<T>() where T : StateBase {
             var state = GetCachedState<T>();
-            if (state == null) return;
-            AddTopInternal(state);
-        }
-
-        public void AddTop(Type stateType) {
-            if (stateType == null) throw new ArgumentNullException(nameof(stateType));
-            if (!m_stateCache.TryGetValue(stateType, out var state)) {
-                Debug.LogError($"[StateEngine] 类型 {stateType.Name} 未在缓存中找到，请先通过 Inspector 注册或调用 RegisterState()。");
-                return;
+            if (state == null) {
+                return false;
             }
 
-            AddTopInternal(state);
+            return AddTopInternal(state);
+        }
+
+        public bool AddTop(Type stateType) {
+            if (stateType == null) {
+                return false;
+            }
+
+            if (!m_stateCache.TryGetValue(stateType, out var state)) {
+                Debug.LogError($"[StateEngine] 类型 {stateType.Name} 未在缓存中找到，请先通过 Inspector 注册或调用 RegisterState()。");
+                return false;
+            }
+
+            return AddTopInternal(state);
         }
 
         public bool TryRemoveTop() {
-            if (IsEmpty) return false;
+            if (isEmpty) return false;
 
             AssertNotBusy();
             SetBusy(true);
@@ -118,7 +125,7 @@ namespace UI.StateEngine {
                 m_statesMessages.Remove(top.GetType());
                 top.gameObject.SetActive(false);
 
-                if (!IsEmpty) {
+                if (!isEmpty) {
                     var newTop = m_stack.Peek();
                     newTop.gameObject.SetActive(true);
                     newTop.DoResume();
@@ -133,18 +140,20 @@ namespace UI.StateEngine {
             }
         }
 
-        public void ReplaceTop<T>() where T : StateBase {
+        public bool ReplaceTop<T>() where T : StateBase {
             var newTop = GetCachedState<T>();
-            if (newTop == null) return;
+            if (newTop == null) {
+                return false;
+            }
 
-            if (IsEmpty) {
+            if (isEmpty) {
                 AddTopInternal(newTop);
-                return;
+                return false;
             }
 
             if (ContainsInstance(newTop)) {
                 Debug.LogError($"[StateEngine] ReplaceTop 失败：{typeof(T).Name} 已在栈中。");
-                return;
+                return false;
             }
 
             AssertNotBusy();
@@ -168,6 +177,7 @@ namespace UI.StateEngine {
                 newTop.DoResume();
                 newTop.ReceiveMessage(GetMessage(newType));
                 m_notifier?.OnStateResume(newTop);
+                return true;
             }
             finally {
                 SetBusy(false);
@@ -184,9 +194,6 @@ namespace UI.StateEngine {
             try {
                 while (m_stack.Count > 0 && !ReferenceEquals(m_stack.Peek(), target)) {
                     var top = m_stack.Peek();
-                    top.DoPause();
-                    m_notifier?.OnStatePause(top);
-
                     m_stack.Pop();
                     top.DoExit();
                     m_statesMessages.Remove(top.GetType());
@@ -194,7 +201,7 @@ namespace UI.StateEngine {
                     top.gameObject.SetActive(false);
                 }
 
-                if (!IsEmpty) {
+                if (!isEmpty) {
                     var newTop = m_stack.Peek();
                     newTop.gameObject.SetActive(true);
                     newTop.DoResume();
@@ -210,7 +217,7 @@ namespace UI.StateEngine {
         }
 
         public void Clear() {
-            if (IsEmpty) return;
+            if (isEmpty) return;
 
             AssertNotBusy();
             SetBusy(true);
@@ -234,16 +241,16 @@ namespace UI.StateEngine {
         #endregion
 
         #region Inner Api
-        private void AddTopInternal(StateBase state) {
+        private bool AddTopInternal(StateBase state) {
             if (ContainsInstance(state)) {
                 Debug.LogError($"[StateEngine] AddTop 失败：{state.GetType().Name} 已在栈中。");
-                return;
+                return false;
             }
 
             AssertNotBusy();
             SetBusy(true);
             try {
-                if (!IsEmpty) {
+                if (!isEmpty) {
                     var oldTop = m_stack.Peek();
                     oldTop.DoPause();
                     oldTop.gameObject.SetActive(false);
@@ -258,6 +265,7 @@ namespace UI.StateEngine {
                 state.DoResume();
                 state.ReceiveMessage(GetMessage(stateType));
                 m_notifier?.OnStateResume(state);
+                return true;
             }
             finally {
                 SetBusy(false);

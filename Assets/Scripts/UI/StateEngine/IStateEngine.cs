@@ -2,8 +2,8 @@ using System;
 
 namespace UI.StateEngine {
     public interface IStateEngine {
-        bool IsEmpty { get; }
-        int Count { get; }
+        bool isEmpty { get; }
+        int count { get; }
 
         /// <summary>Top State | Null</summary>
         StateBase Peek();
@@ -11,12 +11,12 @@ namespace UI.StateEngine {
         bool Contains<T>() where T : StateBase;
 
         /// <summary>编译期已知类型时使用。</summary>
-        void AddTop<T>() where T : StateBase;
+        bool AddTop<T>() where T : StateBase;
 
-        void AddTop(Type stateType);
+        bool AddTop(Type stateType);
 
         bool TryRemoveTop();
-        void ReplaceTop<T>() where T : StateBase;
+        bool ReplaceTop<T>() where T : StateBase;
         bool TryRemoveTo<T>() where T : StateBase;
 
         void Clear();

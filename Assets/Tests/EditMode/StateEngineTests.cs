@@ -77,7 +77,7 @@ public class StateEngineTests
         engine.AddTop<StateA>();
 
         Assert.AreEqual(new[] { "Enter", "Resume" }, a.Log.ToArray());
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
         Assert.IsTrue(ReferenceEquals(engine.Peek(), a));
     }
 
@@ -97,7 +97,7 @@ public class StateEngineTests
 
         Assert.AreEqual(new[] { "Pause" }, a.Log.ToArray());
         Assert.AreEqual(new[] { "Enter", "Resume" }, b.Log.ToArray());
-        Assert.AreEqual(2, engine.Count);
+        Assert.AreEqual(2, engine.count);
         Assert.IsTrue(ReferenceEquals(engine.Peek(), b));
     }
 
@@ -120,7 +120,7 @@ public class StateEngineTests
         Assert.IsTrue(result);
         Assert.AreEqual(new[] { "Pause", "Exit" }, b.Log.ToArray());
         Assert.AreEqual(new[] { "Resume" }, a.Log.ToArray());
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
         Assert.IsTrue(ReferenceEquals(engine.Peek(), a));
     }
 
@@ -142,7 +142,7 @@ public class StateEngineTests
 
         Assert.AreEqual(new[] { "Pause", "Exit" }, b.Log.ToArray());
         Assert.AreEqual(new[] { "Enter", "Resume" }, c.Log.ToArray());
-        Assert.AreEqual(2, engine.Count);
+        Assert.AreEqual(2, engine.count);
         Assert.IsTrue(ReferenceEquals(engine.Peek(), c));
     }
 
@@ -169,7 +169,7 @@ public class StateEngineTests
         Assert.AreEqual(new[] { "Pause", "Exit" }, c.Log.ToArray());
         Assert.AreEqual(new[] { "Pause", "Exit" }, b.Log.ToArray());
         Assert.AreEqual(new[] { "Resume" }, a.Log.ToArray());
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
         Assert.IsTrue(ReferenceEquals(engine.Peek(), a));
     }
 
@@ -187,7 +187,7 @@ public class StateEngineTests
         engine.AddTop<StateA>();
 
         Assert.AreEqual(0, a.Log.Count, "重复 AddTop 不应触发任何生命周期回调");
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
     }
 
     // ===== §9-7：Busy 时重入操作抛异常 =====
@@ -236,7 +236,7 @@ public class StateEngineTests
         var result = engine.TryRemoveTo<StateC>();
 
         Assert.IsFalse(result);
-        Assert.AreEqual(2, engine.Count);
+        Assert.AreEqual(2, engine.count);
     }
 
     // ===== TryRemoveTo 目标已是栈顶 → true 无操作 =====
@@ -254,7 +254,7 @@ public class StateEngineTests
 
         Assert.IsTrue(result);
         Assert.AreEqual(0, a.Log.Count, "目标已是栈顶，不应触发任何回调");
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
     }
 
     // ===== ReplaceTop 空栈 → 退化为首次 AddTop =====
@@ -268,7 +268,7 @@ public class StateEngineTests
         engine.ReplaceTop<StateA>();
 
         Assert.AreEqual(new[] { "Enter", "Resume" }, a.Log.ToArray());
-        Assert.AreEqual(1, engine.Count);
+        Assert.AreEqual(1, engine.count);
     }
 
     // ===== Clear → 从顶到底依次 Pause+Exit =====
@@ -289,7 +289,7 @@ public class StateEngineTests
 
         Assert.AreEqual(new[] { "Pause", "Exit" }, b.Log.ToArray());
         Assert.AreEqual(new[] { "Pause", "Exit" }, a.Log.ToArray());
-        Assert.IsTrue(engine.IsEmpty);
+        Assert.IsTrue(engine.isEmpty);
     }
 
     // ===== HasEntered 复位：TryRemoveTop 后再次 AddTop 重新触发 OnEnter =====
