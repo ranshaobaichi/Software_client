@@ -1,258 +1,110 @@
-﻿# Copilot Instructions for Unity Repository
+# Copilot Code Review Instructions — Unity C# Repository
 
-This repository is a Unity (C#) project with strict requirements on code style, runtime performance, and engineering conventions.
+## Scope
 
-You MUST follow these instructions when generating, modifying, or reviewing code.
-
----
-
-# 1. High-Level Overview
-
-- Project type: Unity game / application
-- Language: C#
-- Runtime: Unity (Mono / IL2CPP)
-- Key concern areas:
-    - Runtime performance (especially per-frame execution)
-    - GC allocation control
-    - Unity lifecycle correctness
-    - Code maintainability and consistency
-
-This is NOT a general-purpose C# project. Unity-specific constraints apply everywhere.
+- **Review only `.cs` files.**
+- Skip all other file types (scenes, prefabs, shaders, assets, configs, etc.) unless they are directly referenced by a `.cs` file in the same diff.
+- Comment only on issues that can be inferred from the visible diff and its immediate context. Do not speculate about code not shown.
 
 ---
 
-# 2. Source of Truth: .editorconfig (MANDATORY)
+## Severity Model
 
-The `.editorconfig` file in this repository is the **single source of truth** for code style.
+Every review comment must include a severity label:
 
-## Rules
+- **[P0]** — Critical: crash risk, corrupted state, broken Unity lifecycle.
+- **[P1]** — Must fix: definite bug, hot-path allocation, forbidden API in loop, missing event unsubscription.
+- **[P2]** — Should fix: maintainability issue, risky pattern, mild style deviation.
+- **[P3]** — Suggestion: alternative approach, minor improvement.
 
-- ALWAYS follow `.editorconfig` when generating or modifying code
-- NEVER introduce formatting inconsistent with `.editorconfig`
-- If existing code violates `.editorconfig`, DO NOT copy the violation
-- Explicitly fix style issues when touching code
-
-## Typical enforced areas include:
-
-- Naming conventions
-- Brace style (`{}` placement)
-- Spacing / indentation
-- Access modifiers
-- Member ordering
-- var vs explicit type
-
-Violating `.editorconfig` is considered a **review issue (P1 or P2 depending on severity)**.
+Only raise P0/P1 when the issue is clearly visible in the diff. Use P2/P3 for patterns that are risky but not definitively broken.
 
 ---
 
-# 3. Unity-Specific Engineering Rules (CRITICAL)
+## Review Checklist
 
-## 3.1 Lifecycle Correctness
+Apply each check below to every changed `.cs` file.
 
-You MUST respect Unity lifecycle semantics:
+### 1. Style & Naming — `.editorconfig` compliance
 
-- `Awake` → initialization independent of other objects
-- `OnEnable` → subscribe to events
-- `Start` → initialization that depends on other objects
-- `OnDisable` / `OnDestroy` → unsubscribe / cleanup
+Flag **[P2]** when any of the following naming rules are violated, as defined in `.editorconfig`:
 
-### REQUIRED
+- Private/protected instance fields must use the `m_` prefix (e.g., `m_health`).
+- Serialized private/protected fields (marked `[SerializeField]`) must use the `_` prefix (e.g., `_speed`). This is defined in `.editorconfig` for this repository and overrides the common Unity `m_` convention.
+- Private/protected static fields must use the `s_` prefix (e.g., `s_instance`).
+- Public members must use PascalCase with no prefix.
 
-- ALWAYS unsubscribe from events
-- NEVER leave dangling delegates
-- AVOID order-dependent initialization unless explicitly handled
+Flag **[P2]** for brace style, indentation, or spacing that visibly conflicts with `.editorconfig`.
 
----
+### 2. Unity Lifecycle Correctness
 
-## 3.2 Update / Frame Loop Constraints
+Flag **[P0]** if a Unity lifecycle method is missing its paired cleanup:
 
-`Update`, `LateUpdate`, `FixedUpdate`, `OnGUI` are HOT PATHS.
+- If `OnEnable` subscribes to an event (e.g., `SomeEvent += Handler`), verify `OnDisable` or `OnDestroy` unsubscribes (e.g., `SomeEvent -= Handler`). If the unsubscription is absent in the diff, flag [P0].
+- If `Awake` or `Start` assigns a delegate or event subscription, verify corresponding removal exists.
 
-### NEVER do:
+Flag **[P1]** if initialization logic that depends on another object is placed in `Awake` instead of `Start`.
 
-- Heavy computation
-- LINQ
-- Allocations (`new`, `ToList`, `string concat`, etc.)
-- `GetComponent` repeatedly
-- `Find`, `GameObject.Find`, `Camera.main`
+Flag **[P2]** if member order in the class does not follow: `const`/`static readonly` → `[SerializeField]` fields → private fields → properties → Unity lifecycle methods → public methods → private methods.
 
-### ALWAYS:
+### 3. Hot-Path Allocations (`Update`, `LateUpdate`, `FixedUpdate`, `OnGUI`)
 
-- Cache references
-- Use preallocated structures
-- Move logic out of Update when possible
+If changed code appears inside or is called from `Update`, `LateUpdate`, `FixedUpdate`, or `OnGUI`:
 
-Violations are at least **P1 (often P0 if severe)**.
+- Flag **[P1]** for any LINQ call (e.g., `.Where(`, `.Select(`, `.FirstOrDefault(`, `.ToList(`, `.Any(`).
+- Flag **[P1]** for `new` allocations of reference types (e.g., `new List<>()`, `new SomeClass()`).
+- Flag **[P1]** for string concatenation using `+` or `$"..."` interpolation.
+- Flag **[P1]** for `GetComponent<T>()` called without caching the result.
+- Flag **[P1]** for `Camera.main`, `GameObject.Find(`, or `FindObjectOfType<T>()` called without caching.
+- Flag **[P2]** for `foreach` over non-generic collections, LINQ results, or custom types that do not implement a struct enumerator (these may allocate a heap enumerator). Arrays and `List<T>` are safe and do not need to be flagged.
 
----
+### 4. LINQ Usage Outside Hot Paths
 
-## 3.3 LINQ Usage Policy
+If LINQ appears outside an Update-like method:
 
-- LINQ is **DISCOURAGED in all runtime code**
-- Treat LINQ in gameplay/runtime code as a **problem by default**
-- Allowed only if:
-    - clearly not in hot path
-    - no allocation risk
-    - strongly justified
+- Flag **[P2]** if the call is inside a method that appears to be called frequently at runtime (e.g., per-message or per-frame).
+- Flag **[P3]** if LINQ is used where a simple loop would have zero allocation overhead.
+- Do not flag LINQ that is demonstrably editor-only, initialization-only, or test code.
 
-Otherwise: **P1 or P2 issue**
+### 5. Expensive Unity API Calls
 
----
+Flag **[P1]** for any of the following when called inside a hot path (Update-like or frequently-called runtime method):
 
-## 3.4 Component & API Usage
+- `GetComponent<T>()` result not assigned to a cached field.
+- `FindObjectOfType<T>()` or `FindObjectsOfType<T>()`.
+- `Resources.Load(` at runtime.
+- `Instantiate(` or `Destroy(` called in a loop or every frame without a pool.
 
-Avoid expensive Unity APIs in runtime loops:
+Flag **[P2]** for the same calls outside hot paths when a cached alternative is straightforward.
 
-- `GetComponent` → cache result
-- `FindObjectOfType` → avoid or cache
-- `Resources.Load` → avoid in runtime paths
-- `Instantiate/Destroy` → avoid frequent usage, prefer pooling
+### 6. Serialization Safety
 
----
+Flag **[P1]** if a shared/asset `ScriptableObject` field is mutated at runtime (i.e., written to, not just read), as this permanently modifies the shared asset. This applies to `ScriptableObject` instances loaded from assets or injected via `[SerializeField]`; runtime-created instances (via `ScriptableObject.CreateInstance`) are exempt.
 
-## 3.5 Serialization Rules
+Flag **[P2]** if `[SerializeField]` is applied to a field whose type is not serializable by Unity (complex generics, interfaces, non-Unity objects).
 
-- Only serializable fields should be `[SerializeField]`
-- Avoid runtime mutation of ScriptableObject shared data
-- Be careful with:
-    - reference sharing
-    - unintended asset mutation
-    - hidden coupling
+Flag **[P2]** if a public field on a `MonoBehaviour` or `ScriptableObject` is mutable and exposes asset state without any guard, creating hidden coupling risk.
 
----
+### 7. Null Safety
 
-# 4. Code Structure & Member Ordering
+Flag **[P1]** if the diff dereferences a reference that could be null based on visible context (e.g., result of `GetComponent`, `FindObjectOfType`, or unchecked method return) without a null check.
 
-Unless otherwise specified by the repository, follow this order:
+Flag **[P2]** if a null check is present but the failure path is silently swallowed (empty `catch`, missing log).
 
-1. `const` / `static readonly`
-2. `[SerializeField]` fields
-3. private fields
-4. public properties
-5. Unity lifecycle methods
-6. public methods
-7. private methods
+### 8. Code Quality
 
-Incorrect ordering is a **P2 issue**.
+Flag **[P2]** for dead code (unreachable branches, unused private methods or fields) visible in the diff.
+
+Flag **[P2]** for a method that clearly does more than one thing and could be split cleanly.
+
+Flag **[P3]** for deep nesting (more than 3 levels) where an early-return or guard clause would improve readability.
 
 ---
 
-# 5. Performance & GC Constraints
+## What Not to Flag
 
-Unity performance is highly sensitive to allocations.
-
-## 5.1 Avoid GC Allocations
-
-Common sources to avoid:
-
-- LINQ
-- lambda / closures
-- iterator (`yield`)
-- boxing
-- string concatenation in loops
-- temporary collections
-- foreach (in some cases)
-
-## 5.2 Hot Path Awareness
-
-Always ask:
-
-> Is this executed every frame or frequently?
-
-If YES:
-- ZERO allocation preferred
-- minimal branching
-- no reflection
-- no dynamic lookup
-
----
-
-## 5.3 Object Lifecycle
-
-Check for:
-
-- event leaks
-- static references preventing GC
-- improper pooling
-- missing cleanup
-
----
-
-# 6. Code Quality Requirements
-
-You MUST ensure:
-
-- No null reference risks
-- Clear ownership of data
-- No duplicated logic
-- No dead code
-- Clear and consistent naming
-- Methods have single responsibility
-
-Avoid:
-
-- God classes
-- Deep nesting
-- Hidden side effects
-
----
-
-# 7. CI / Validation Expectations
-
-Before considering a change correct:
-
-- Code compiles in Unity
-- No obvious runtime errors
-- No violation of `.editorconfig`
-- No Unity lifecycle misuse
-- No performance regressions in hot paths
-
-If uncertain, prefer safer implementation.
-
----
-
-# 8. Review Severity Model
-
-When reviewing or generating suggestions, classify issues:
-
-- **P0**: Critical (crash, broken runtime, corrupted state)
-- **P1**: Must fix (serious bug, performance issue, rule violation)
-- **P2**: Should fix (maintainability / moderate issue)
-- **P3**: Suggestion (better pattern / improvement)
-
----
-
-# 9. How Copilot Should Behave
-
-- Do NOT assume this is standard C# — always consider Unity context
-- Do NOT introduce LINQ casually
-- Do NOT introduce allocations in Update-like methods
-- ALWAYS follow `.editorconfig`
-- Prefer explicit, safe, and performant code over concise code
-- Prefer readability over cleverness
-- If unsure, choose conservative and predictable implementation
-
----
-
-# 10. When to Search the Codebase
-
-Only search the repository if:
-
-- conventions are unclear
-- lifecycle usage differs from standard
-- architecture requires context
-
-Otherwise, TRUST these instructions.
-
----
-
-# 11. Summary
-
-This repository prioritizes:
-
-1. Correctness (no runtime bugs)
-2. Performance (no unnecessary allocations)
-3. Consistency (strict `.editorconfig`)
-4. Unity best practices
-
-Violating any of the above is likely to cause PR rejection.
+- Do not comment on files outside the diff.
+- Do not suggest refactors unrelated to the changed lines unless a direct defect exists.
+- Do not flag style issues in unchanged surrounding context lines.
+- Do not raise speculative issues (e.g., "this might be called in Update somewhere else").
+- Do not comment on non-C# files unless a specific `.cs` file in the diff directly breaks due to them.
