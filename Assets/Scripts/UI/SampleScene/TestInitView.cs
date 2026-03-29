@@ -5,7 +5,7 @@ namespace UI.SampleScene {
     public class TestInitView : MonoBehaviour {
         [SerializeField]
         private Text _state1Text;
-        
+
         private TestInitViewModel m_viewModel;
 
         public void SetViewModel(TestInitViewModel viewModel) {

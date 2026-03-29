@@ -1,7 +1,7 @@
 namespace UI.SampleScene {
     public class TestInitViewModel {
         public int state1Number;
-        
+
         public TestInitViewModel(int number = -1) {
             state1Number = number;
         }
