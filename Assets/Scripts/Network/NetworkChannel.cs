@@ -6,55 +6,67 @@ using System.Net.Sockets;
 using System.Threading;
 
 namespace Network {
+    public interface INetworkChannel {
+        bool IsConnected { get; }
+        void Connect();
+        void Disconnect();
+        void Send<T>(T payload) where T : class;
+        void RegisterHandler<T>(Action<T> callback) where T : class;
+        void ClearHandler();
+        void DispatchPendingMessages();
+    }
+
     /// <summary>
     /// Specific TCP channel implementation, using the long connection pattern
     /// </summary>
     public class TcpConnectionChannel : INetworkChannel {
-        public bool IsConnected => Interlocked.CompareExchange(ref _connected, 0, 0) == 1 && _client?.Connected == true;
+        public bool IsConnected => Interlocked.CompareExchange(ref m_connected, 0, 0) == 1 && m_client?.Connected == true;
         public event Action OnConnected;
         public event Action OnDisconnected;
-        
-        private readonly string _host;
-        private readonly int _port;
-        private readonly IMessageFramer _framer;
-        private readonly IMessageSerializer _serializer;
 
-        private TcpClient _client;
-        private Stream _stream;
-        private Thread _receiveThread;
-        private volatile bool _running;
+        private readonly string m_host;
+        private readonly int m_port;
+        private readonly IMessageFramer m_framer;
+        private readonly IMessageSerializer m_serializer;
+
+        private TcpClient m_client;
+        private Stream m_stream;
+        private Thread m_receiveThread;
+
+        private volatile bool m_running;
+
         // 1 = connected, 0 = not connected; use Interlocked to read-and-clear atomically
-        private int _connected;
-        private readonly object _sendLock = new object();
+        private int m_connected;
+        private readonly object m_sendLock = new object();
 
-        private readonly ConcurrentQueue<byte[]> _incoming = new ConcurrentQueue<byte[]>();
-        private Type _handlerType;
-        private Delegate _handlerCallback;
-        private readonly object _handlerLock = new object();
-        
+        private readonly ConcurrentQueue<byte[]> m_incoming = new ConcurrentQueue<byte[]>();
+        private Type m_handlerType;
+        private Delegate m_handlerCallback;
+        private readonly object m_handlerLock = new object();
+
         public TcpConnectionChannel(string host, int port, IMessageFramer framer, IMessageSerializer serializer) {
-            _host = host ?? Constants.NetworkConstants.DefaultHost;
-            _port = port;
-            _framer = framer ?? new LineFramer();
-            _serializer = serializer ?? new JsonMessageSerializer();
+            m_host = host ?? Constants.NetworkConstants.DefaultHost;
+            m_port = port;
+            m_framer = framer ?? new LineFramer();
+            m_serializer = serializer ?? new JsonMessageSerializer();
         }
 
         public void Connect() {
-            if (_running) return;
+            if (m_running) return;
             try {
-                _client = new TcpClient();
-                _client.Connect(_host, _port);
-                _stream = _client.GetStream();
-                _connected = 1;
-                _running = true;
-                _receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
-                _receiveThread.Start();
+                m_client = new TcpClient();
+                m_client.Connect(m_host, m_port);
+                m_stream = m_client.GetStream();
+                m_connected = 1;
+                m_running = true;
+                m_receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
+                m_receiveThread.Start();
                 OnConnected?.Invoke();
             }
             catch (Exception ex) {
                 Debug.LogError("[TcpConnectionChannel] Connect failed: " + ex.Message);
-                _running = false;
-                _connected = 0;
+                m_running = false;
+                m_connected = 0;
             }
         }
 
@@ -64,31 +76,31 @@ namespace Network {
         /// [Remember to set the channel variable to null after disconnection to avoid accidental reuse.]
         /// </summary>
         public void Disconnect() {
-            bool wasConnected = Interlocked.Exchange(ref _connected, 0) == 1;
-            _running = false;
+            bool wasConnected = Interlocked.Exchange(ref m_connected, 0) == 1;
+            m_running = false;
             try {
-                _client?.Close();
+                m_client?.Close();
             }
             catch {
                 // ignored
             }
 
             try {
-                _stream?.Close();
+                m_stream?.Close();
             }
             catch {
                 // ignored
             }
 
             try {
-                _receiveThread?.Join(500);
+                m_receiveThread?.Join(500);
             }
             catch {
                 // ignored
             }
 
-            _stream = null;
-            _client = null;
+            m_stream = null;
+            m_client = null;
             if (wasConnected)
                 OnDisconnected?.Invoke();
         }
@@ -100,12 +112,12 @@ namespace Network {
         /// <param name="payload"></param>
         /// <typeparam name="T"></typeparam>
         public void Send<T>(T payload) where T : class {
-            lock (_sendLock) {
-                if (_stream == null || _serializer == null) return;
+            lock (m_sendLock) {
+                if (m_stream == null || m_serializer == null) return;
                 try {
-                    byte[] raw = _serializer.Serialize(payload);
+                    byte[] raw = m_serializer.Serialize(payload);
                     if (raw != null)
-                        _framer.WriteMessage(_stream, raw);
+                        m_framer.WriteMessage(m_stream, raw);
                 }
                 catch (Exception ex) {
                     Debug.LogWarning("[TcpConnectionChannel] Send failed: " + ex.Message);
@@ -121,37 +133,37 @@ namespace Network {
         /// <typeparam name="T">required can be serialized</typeparam>
         public void RegisterHandler<T>(Action<T> callback) where T : class {
             if (callback == null) return;
-            lock (_handlerLock) {
-                _handlerType = typeof(T);
-                _handlerCallback = callback;
+            lock (m_handlerLock) {
+                m_handlerType = typeof(T);
+                m_handlerCallback = callback;
             }
         }
 
         public void ClearHandler() {
-            lock (_handlerLock) {
-                _handlerType = null;
-                _handlerCallback = null;
+            lock (m_handlerLock) {
+                m_handlerType = null;
+                m_handlerCallback = null;
             }
         }
 
         public void DispatchPendingMessages() {
             Type type;
             Delegate callback;
-            lock (_handlerLock) {
-                type = _handlerType;
-                callback = _handlerCallback;
+            lock (m_handlerLock) {
+                type = m_handlerType;
+                callback = m_handlerCallback;
             }
 
             if (type == null || callback == null) {
-                while (_incoming.TryDequeue(out _)) { }
+                while (m_incoming.TryDequeue(out _)) { }
 
                 return;
             }
 
-            while (_incoming.TryDequeue(out byte[] data)) {
+            while (m_incoming.TryDequeue(out byte[] data)) {
                 if (data == null || data.Length == 0) continue;
                 try {
-                    object obj = _serializer.Deserialize(data, type);
+                    object obj = m_serializer.Deserialize(data, type);
                     if (obj != null)
                         callback.DynamicInvoke(obj);
                 }
@@ -163,20 +175,20 @@ namespace Network {
 
         private void ReceiveLoop() {
             try {
-                while (_running && _stream != null) {
-                    if (_framer.TryReadMessage(_stream, out byte[] message) && message != null)
-                        _incoming.Enqueue(message);
-                    else if (!_stream.CanRead)
+                while (m_running && m_stream != null) {
+                    if (m_framer.TryReadMessage(m_stream, out byte[] message) && message != null)
+                        m_incoming.Enqueue(message);
+                    else if (!m_stream.CanRead)
                         break;
                 }
             }
             catch (Exception ex) {
-                if (_running)
+                if (m_running)
                     Debug.LogWarning("[TcpConnectionChannel] Receive error: " + ex.Message);
             }
             finally {
-                bool wasConnected = Interlocked.Exchange(ref _connected, 0) == 1;
-                _running = false;
+                bool wasConnected = Interlocked.Exchange(ref m_connected, 0) == 1;
+                m_running = false;
                 if (wasConnected)
                     OnDisconnected?.Invoke();
             }

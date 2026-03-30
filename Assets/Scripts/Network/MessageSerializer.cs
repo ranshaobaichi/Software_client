@@ -3,6 +3,11 @@ using System;
 using System.Text;
 
 namespace Network {
+    public interface IMessageSerializer {
+        byte[] Serialize<T>(T payload) where T : class;
+        object Deserialize(byte[] data, Type type);
+    }
+    
     /// <summary>
     /// Serializer based on Unity's built-in JsonUtility.
     /// Note that JsonUtility has limitations
