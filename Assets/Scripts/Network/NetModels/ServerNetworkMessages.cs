@@ -1,36 +1,38 @@
 using System;
+using Constants;
 
 namespace Network.Messages {
-    [Serializable]
-    public class ResponseStatusBase {
-        public bool status;
+    #region Client Message Types
+    public abstract class ClientNetworkMessage {
+        public int type;
     }
-
+    #endregion
+    
+    #region Server Message Types
+    public abstract class ServerNetworkMessages {}
     [Serializable]
-    public class SuccessResponse : ResponseStatusBase {
-        public string data;
-    }
-
+    public class ServerNetworkSuccessMessage : ServerNetworkMessages {}
     [Serializable]
-    public class ErrorResponse : ResponseStatusBase {
-        public int errorCode;
+    public class ServerNetworkFailMessage : ServerNetworkMessages {}
+
+    public class NetworkErrorMessage {
+        public ServerCode code;
         public string message;
     }
-
+    
     /// <summary>
     /// Wire-format envelope for all server responses.
-    /// <c>status</c> discriminates the two cases:
-    /// true  → <c>data</c> carries the business payload JSON;
-    /// false → <c>errorCode</c> and <c>message</c> describe the failure.
+    /// See <see cref="ServerEnvelope"/> for code usage.
     /// </summary>
     [Serializable]
     public class ServerEnvelope {
-        public bool status;
+        public int code;
         public string data;
-        public int errorCode;
         public string message;
     }
+    #endregion
 
+    #region Sample Message Types
     [Serializable]
     public class NetPlayer {
         public string id;
@@ -63,4 +65,5 @@ namespace Network.Messages {
         public string id;
         public NetPlayer[] players;
     }
+    #endregion
 }
