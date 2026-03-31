@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace UI.Account
@@ -9,34 +10,36 @@ namespace UI.Account
         public GameObject loginPanel;
         public GameObject registerPanel;
 
+        [FormerlySerializedAs("accountInput_Login")]
         [Header("输入框")]
-        public InputField accountInput_Login;
-        public InputField accountInput_Register;
+        public InputField accountInputLogin;
+        [FormerlySerializedAs("accountInput_Register")]
+        public InputField accountInputRegister;
 
-        private AccountViewModel _viewModel;
+        private AccountViewModel m_viewModel;
 
         public void SetViewModel(AccountViewModel vm)
         {
-            _viewModel = vm;
+            m_viewModel = vm;
             Render();
         }
 
         public void Render()
         {
-            if (_viewModel == null) return;
-            accountInput_Login.text = _viewModel.Account;
-            accountInput_Register.text = _viewModel.Account;
+            if (m_viewModel == null) return;
+            accountInputLogin.text = m_viewModel.Account;
+            accountInputRegister.text = m_viewModel.Account;
         }
 
         public void OnLoginAccountChanged(string value)
         {
-            if (_viewModel == null) return;
-            _viewModel.Account = value;
+            if (m_viewModel == null) return;
+            m_viewModel.Account = value;
         }
 
         public string GetAccount()
         {
-            return _viewModel != null ? _viewModel.Account : "";
+            return m_viewModel != null ? m_viewModel.Account : "";
         }
 
         public void ShowLogin()

@@ -9,18 +9,18 @@ namespace UI.States
     {
         [SerializeField] private AccountView _view;
 
-        private AccountViewModel _viewModel;
+        private AccountViewModel m_viewModel;
 
         protected override void OnEnter()
         {
             base.OnEnter();
 
-            _viewModel = new AccountViewModel();
-            _view.SetViewModel(_viewModel);
+            m_viewModel = new AccountViewModel();
+            _view.SetViewModel(m_viewModel);
             _view.Render();
         }
 
-        // 登录按钮（在Unity里绑定）
+
         public void OnLoginClick()
         {
             string account = _view.GetAccount();
@@ -28,19 +28,18 @@ namespace UI.States
             m_StateEngine.AddTop<HomeState>();
         }
 
-        // 去注册按钮（Unity里绑定）
+
         public void OnGoRegisterClick()
         {
             _view.ShowRegister();
         }
 
-        // 注册按钮（Unity里绑定）
         public void OnRegisterClick()
         {
             _view.ShowLogin();
         }
 
-        // 去登录按钮（Unity里绑定）
+
         public void OnGoLoginClick()
         {
             _view.ShowLogin();
