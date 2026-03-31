@@ -22,7 +22,7 @@ namespace UI.States
             _logoutBtn.onClick.AddListener(OnLogoutClick);
         }
 
-        public override void ReceiveMessage(Dictionary<System.Type, object> messages)
+        /*public override void ReceiveMessage(Dictionary<System.Type, object> messages)
         {
             if (messages == null) return;
             if (messages.TryGetValue(typeof(LoginState), out var obj) && obj is string account)
@@ -31,7 +31,7 @@ namespace UI.States
                 _view.Render();
             }
         }
-
+*/
         private void OnLogoutClick()
         {
             m_StateEngine.TryRemoveTop();
