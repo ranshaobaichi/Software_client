@@ -5,7 +5,7 @@ using Constants;
 using Network;
 using Network.Messages;
 
-namespace UI.States {
+namespace UI.SampleScene {
     public class TestState2 : StateBase {
         #region Inner Classes
         [Serializable]
@@ -14,11 +14,11 @@ namespace UI.States {
         }
         [Serializable]
         private class SampleState2ServerSuccessMessage : ServerNetworkSuccessMessage {
-            
+            public string content;
         }
         [Serializable]
         private class SampleState2ServerFailMessage : ServerNetworkFailMessage {
-            
+            public string content;
         }
         #endregion
         
@@ -46,11 +46,11 @@ namespace UI.States {
         }
 
         private static void OnSuccess(SampleState2ServerSuccessMessage msg) {
-            Debug.Log("Success");
+            Debug.Log($"Success: {msg.content}");
         }
 
         private static void OnFail(SampleState2ServerFailMessage msg) {
-            Debug.Log("Fail");
+            Debug.Log($"Fail: {msg.content}");
         }
     }
 }
