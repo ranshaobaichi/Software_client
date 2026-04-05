@@ -32,7 +32,7 @@ namespace UI.StateEngine {
         private readonly Dictionary<Type, Dictionary<Type, object>> m_statesMessages =
                 new Dictionary<Type, Dictionary<Type, object>>();
 
-        private void Start() {
+        public void Initialize() {
             // set notifier for debug
             // m_notifier = new StateEngineDebugNotifier();
 
@@ -53,6 +53,10 @@ namespace UI.StateEngine {
                     Debug.LogWarning($"[StateEngine] 类型 {stateType.Name} 已注册，重复项被忽略。");
                     Destroy(stateBase.gameObject);
                 }
+            }
+
+            if (!isEmpty) {
+                Clear();
             }
 
             if (_initState?.state != null)
@@ -76,8 +80,10 @@ namespace UI.StateEngine {
         }
 
         public void SendMessage<T1, T2>(object message) where T1 : StateBase where T2 : StateBase {
-            var fromType = typeof(T1);
-            var toType = typeof(T2);
+            SendMessage(typeof(T1), typeof(T2), message);
+        }
+
+        public void SendMessage(Type fromType, Type toType, object message) {
             if (!m_statesMessages.TryGetValue(toType, out var fromDict)) {
                 fromDict = new Dictionary<Type, object>();
                 m_statesMessages[toType] = fromDict;
@@ -192,9 +198,16 @@ namespace UI.StateEngine {
             AssertNotBusy();
             SetBusy(true);
             try {
+                var originTop = m_stack.Peek();
                 while (m_stack.Count > 0 && !ReferenceEquals(m_stack.Peek(), target)) {
                     var top = m_stack.Peek();
                     m_stack.Pop();
+
+                    if (top == originTop) {
+                        top.DoPause();
+                        m_notifier?.OnStatePause(top);
+                    }
+
                     top.DoExit();
                     m_statesMessages.Remove(top.GetType());
                     m_notifier?.OnStateExit(top);
@@ -222,10 +235,13 @@ namespace UI.StateEngine {
             AssertNotBusy();
             SetBusy(true);
             try {
+                var originTop = m_stack.Peek();
                 while (m_stack.Count > 0) {
                     var top = m_stack.Peek();
-                    top.DoPause();
-                    m_notifier?.OnStatePause(top);
+                    if (top == originTop) {
+                        top.DoPause();
+                        m_notifier?.OnStatePause(top);
+                    }
 
                     m_stack.Pop();
                     top.DoExit();

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UI.StateEngine;
 
-namespace UI.States {
+namespace UI.SampleScene {
     public class TestState1 : StateBase {
         [SerializeField]
         private int _chooseNumber = -1;
