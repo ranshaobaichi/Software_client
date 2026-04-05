@@ -200,8 +200,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3126079286823711515}
-        m_TargetAssemblyTypeName: UI.States.TestState1, Assembly-CSharp
+      - m_Target: {fileID: 8652629512475872695}
+        m_TargetAssemblyTypeName: UI.SampleScene.TestState1, UI
         m_MethodName: ChooseNumber
         m_Mode: 3
         m_Arguments:
@@ -491,8 +491,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3126079286823711515}
-        m_TargetAssemblyTypeName: UI.States.TestState1, Assembly-CSharp
+      - m_Target: {fileID: 8652629512475872695}
+        m_TargetAssemblyTypeName: UI.SampleScene.TestState1, UI
         m_MethodName: ChooseNumber
         m_Mode: 3
         m_Arguments:
@@ -658,7 +658,7 @@ GameObject:
   - component: {fileID: 1914865777093772499}
   - component: {fileID: 7791765277135638392}
   - component: {fileID: 4471469671360244071}
-  - component: {fileID: 3126079286823711515}
+  - component: {fileID: 8652629512475872695}
   m_Layer: 5
   m_Name: TestState1
   m_TagString: Untagged
@@ -709,7 +709,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -726,7 +726,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &3126079286823711515
+--- !u!114 &8652629512475872695
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -860,8 +860,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3126079286823711515}
-        m_TargetAssemblyTypeName: UI.States.TestState1, Assembly-CSharp
+      - m_Target: {fileID: 8652629512475872695}
+        m_TargetAssemblyTypeName: UI.SampleScene.TestState1, UI
         m_MethodName: OnReturnClicked
         m_Mode: 1
         m_Arguments:
@@ -1072,8 +1072,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3126079286823711515}
-        m_TargetAssemblyTypeName: UI.States.TestState1, Assembly-CSharp
+      - m_Target: {fileID: 8652629512475872695}
+        m_TargetAssemblyTypeName: UI.SampleScene.TestState1, UI
         m_MethodName: ChooseNumber
         m_Mode: 3
         m_Arguments:

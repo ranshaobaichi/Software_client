@@ -60,13 +60,80 @@ class ServerState:
 STATE = ServerState()
 
 
+# ---- ServerCode (mirrors Constants.ServerCode in C#) ----
+class ServerCode:
+    SUCCESS = 1
+    FAIL = 1 << 1
+    ERROR = 1 << 2
+
+
+def make_envelope(code: int, data: dict = None, message: str = "") -> dict:
+    """Build a ServerEnvelope dict matching the C# ServerEnvelope wire format.
+    Note: `data` is serialized to a JSON *string*, not a nested object."""
+    return {
+        "code": code,
+        "data": json.dumps(data, separators=(",", ":")) if data else "{}",
+        "message": message,
+    }
+
+
+# ---- Short-request business handlers (keyed by ClientNetworkMessage.type) ----
+
+def _handle_sample_success(msg: dict) -> dict:
+    content = msg.get("content", "")
+    return make_envelope(ServerCode.SUCCESS, {"content": f"echo: {content}"}, "ok")
+
+
+def _handle_sample_fail(msg: dict) -> dict:
+    content = msg.get("content", "")
+    return make_envelope(ServerCode.FAIL, {"content": f"echo: {content}"}, "service failed")
+
+
+SHORT_REQUEST_HANDLERS: Dict[int, callable] = {
+    0: _handle_sample_success,   # SampleState2MessageType.SUCCESS
+    1: _handle_sample_fail,      # SampleState2MessageType.FAIL
+}
+
+
 def send_json_line(conn: socket.socket, data: Dict[str, object]) -> None:
     payload = json.dumps(data, separators=(",", ":")) + "\n"
     conn.sendall(payload.encode("utf-8"))
 
 
-def handle_client(conn: socket.socket, addr):
-    print(f"[+] Connected: {addr}")
+def handle_short_connection(conn: socket.socket, addr) -> None:
+    """One-shot short-lived request: read one message, respond with ServerEnvelope, close."""
+    try:
+        file_obj = conn.makefile("r", encoding="utf-8", newline="\n")
+        line = file_obj.readline()
+        if not line or not line.strip():
+            return
+
+        try:
+            msg = json.loads(line.strip())
+        except json.JSONDecodeError:
+            send_json_line(conn, make_envelope(ServerCode.ERROR, message="Invalid JSON"))
+            return
+
+        msg_type = msg.get("type")
+        handler = SHORT_REQUEST_HANDLERS.get(msg_type)
+        if handler:
+            envelope = handler(msg)
+        else:
+            envelope = make_envelope(ServerCode.ERROR, message=f"Unknown type: {msg_type}")
+
+        send_json_line(conn, envelope)
+    except (ConnectionError, OSError):
+        pass
+    finally:
+        try:
+            conn.close()
+        except OSError:
+            pass
+        print(f"[~] Short request from {addr} completed")
+
+
+def handle_game_connection(conn: socket.socket, addr) -> None:
+    """Long-lived game connection: server sends welcome, then processes move commands."""
     player_id = STATE.add_client(conn)
     try:
         send_json_line(conn, {"type": "welcome", "id": player_id})
@@ -98,6 +165,32 @@ def handle_client(conn: socket.socket, addr):
         except OSError:
             pass
         print(f"[-] Disconnected: {addr} (player {player_id})")
+
+
+def handle_client(conn: socket.socket, addr):
+    """Detect connection type by peeking for early data, then dispatch.
+
+    Short connections (ClientNetworkMessage): client speaks first.
+    Game connections: client waits for the server's welcome message.
+    """
+    conn.settimeout(0.5)
+    try:
+        peek = conn.recv(1, socket.MSG_PEEK)
+    except socket.timeout:
+        peek = None
+    except (ConnectionError, OSError):
+        try:
+            conn.close()
+        except OSError:
+            pass
+        return
+
+    if peek:
+        conn.settimeout(5.0)
+        handle_short_connection(conn, addr)
+    else:
+        conn.settimeout(None)
+        handle_game_connection(conn, addr)
 
 
 def broadcast_loop():

@@ -23,5 +23,7 @@ namespace UI.StateEngine {
 
         void SendMessage<T1, T2>(object message)
                 where T1 : StateBase where T2 : StateBase;
+
+        void SendMessage(Type fromType, Type toType, object message);
     }
 }

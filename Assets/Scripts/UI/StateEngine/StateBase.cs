@@ -10,6 +10,7 @@ namespace UI.StateEngine {
         protected IStateEngine m_StateEngine;
 
         internal void SetStateEngine(IStateEngine stateEngine) => m_StateEngine = stateEngine;
+        public IStateEngine GetStateEngine() => m_StateEngine;
         public virtual void ReceiveMessage(Dictionary<Type, object> messages) { }
 
         #region Lifecycle Api
