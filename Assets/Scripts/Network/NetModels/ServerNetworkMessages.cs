@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Constants;
 
 namespace Network.Messages {
@@ -22,16 +23,68 @@ namespace Network.Messages {
     
     /// <summary>
     /// Wire-format envelope for all server responses.
-    /// See <see cref="ServerEnvelope"/> for code usage.
+    /// Use <see cref="ServerEnvelope{T}"/> to deserialize data directly.
     /// </summary>
     [Serializable]
-    public class ServerEnvelope {
+    public class ServerEnvelope<T> where T : class {
         public int code;
-        public string data;
+        public T data;
         public string message;
     }
     #endregion
 
+    #region Login Service
+    [Serializable]
+    public class LoginRequest : ClientNetworkMessage {
+        public string uid;
+    }
+
+    [Serializable]
+    public class LoginResponse : ServerNetworkSuccessMessage {
+        public PlayerData playerData;
+    }
+    
+    [Serializable]
+    public class RegisterRequest : ClientNetworkMessage {
+    }
+
+    [Serializable]
+    public class RegisterResponse : ServerNetworkSuccessMessage {
+        public string uid;
+    }
+    #endregion
+
+    #region Home Service
+    [Serializable]
+    public class CreateRoomRequest : ClientNetworkMessage {
+        public string uid;
+        public int maximumPeople;
+    }
+    [Serializable]
+    public class CreateRoomResponse : ServerNetworkSuccessMessage {
+        public int roomId;
+    }
+    
+    [Serializable]
+    public class JoinRoomRequest : ClientNetworkMessage {
+        public string uid;
+        public int roomId;
+    }
+    
+    [Serializable]
+    public class RefreshRoomRequest : ClientNetworkMessage {}
+    [Serializable]
+    public class RoomInfo {
+        public int roomId;
+        public int maximumPeople;
+        public List<PlayerData.PlayerBasicInfo> basicInfos;
+    }
+    [Serializable]
+    public class RefreshRoomResponse : ServerNetworkSuccessMessage {
+        public List<RoomInfo> infos;
+    }
+    #endregion
+    
     #region Sample Message Types
     [Serializable]
     public class NetPlayer {

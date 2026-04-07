@@ -163,7 +163,9 @@ namespace Network {
             while (m_incoming.TryDequeue(out byte[] data)) {
                 if (data == null || data.Length == 0) continue;
                 try {
-                    object obj = m_serializer.Deserialize(data, type);
+                    object obj = type == typeof(byte[])
+                            ? data
+                            : m_serializer.Deserialize(data, type);
                     if (obj != null)
                         callback.DynamicInvoke(obj);
                 }
