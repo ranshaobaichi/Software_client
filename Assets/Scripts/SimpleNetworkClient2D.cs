@@ -6,7 +6,7 @@ using Network.Messages;
 public class SimpleNetworkClient2D : MonoBehaviour {
     [Header("Server")]
     public string host = Constants.NetworkConstants.DefaultHost;
-    public int port = Constants.NetworkConstants.DefaultPort;
+    public int port = Constants.NetworkConstants.LoginPort;
 
     [Header("Movement")]
     public float moveSpeed = 4f;

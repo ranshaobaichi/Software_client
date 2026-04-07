@@ -3,8 +3,8 @@ using System;
 namespace Constants {
     public static class NetworkConstants {
         public const string DefaultHost = "127.0.0.1";
-        public const int DefaultPort = 8765;
-
+        public const int LoginPort = 8765;
+        public const int HomePort = 8766;
     }
 
     [Flags]
@@ -32,4 +32,31 @@ namespace Constants {
         FAIL = 1,
     }
     #endregion
+
+    #region PlayerData Service
+    public enum PlayerAvatarColor {
+        
+    }
+    #endregion
+
+    #region Login Service
+    public enum LoginRequestType {
+        LOGIN = 0,
+        REGISTER = 1,
+    }
+    #endregion
+    
+    #region Home Service
+    public enum HomeRequestType {
+        CREATE_ROOM = 0,
+        JOIN_ROOM = 1,
+        LEAVE_ROOM = 2,
+        LIST_ROOMS = 3,
+        SEND_MESSAGE = 4,
+        HEARTBEAT = 5,
+        EDIT_PROFILE = 6,
+    }
+    #endregion
 }
+
+

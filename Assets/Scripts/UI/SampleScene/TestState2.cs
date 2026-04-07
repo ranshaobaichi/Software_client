@@ -28,7 +28,7 @@ namespace UI.SampleScene {
                     content = "Success"
             };
             NetworkManager.SInstance.SendShortRequestWithSuccess<SampleState2ClientMessage, SampleState2ServerSuccessMessage>(
-                    NetworkConstants.DefaultPort, succRequest, OnSuccess);
+                    NetworkConstants.LoginPort, succRequest, OnSuccess);
         }
         
         public void SendFail() {
@@ -37,7 +37,7 @@ namespace UI.SampleScene {
                     content = "Fail"
             };
             NetworkManager.SInstance.SendShortRequestWithFailure<SampleState2ClientMessage, SampleState2ServerFailMessage>(
-                    NetworkConstants.DefaultPort, failRequest, OnFail);
+                    NetworkConstants.LoginPort, failRequest, OnFail);
         }
 
         

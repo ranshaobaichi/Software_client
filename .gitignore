@@ -79,3 +79,10 @@ Packages/manifest.tmp
 
 sysinfo.txt
 Assets/TODO.md
+
+########################
+# Specific to this project
+########################
+
+Assets/Resources/localize_data.json
+Assets/Resources/localize_data.json.meta
