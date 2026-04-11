@@ -186,24 +186,29 @@ public class StateEngineLifecycleTests {
     }
 
     [Test]
-    public void AddTop_DuplicatedType_DoNothing() {
+    public void AddTop_DuplicatedType_LogWarningAndReplaceAndLogError() {
         // Arrange
         var a = CreateAndRegisterState<StateA>();
-        var other_a = CreateAndRegisterState<StateA>();
-        m_engine.AddTop<StateA>();
-        a.ClearLog();
+        LogAssert.Expect(LogType.Warning,
+                $"[StateEngine] RegisterState: 类型 {nameof(StateA)} 已存在，将覆盖。");
+        LogAssert.Expect(LogType.Error,
+                $"[StateEngine] AddTop 失败：{nameof(StateA)} 已在栈中。");
 
         // Act
+        var otherA = CreateAndRegisterState<StateA>();
+        m_engine.AddTop<StateA>();
+        a.ClearLog();
         bool ret = m_engine.AddTop<StateA>();
 
         // Assert
         Assert.IsFalse(ret);
         Assert.IsFalse(m_engine.isEmpty);
         Assert.AreEqual(1, m_engine.count);
-        Assert.IsTrue(ReferenceEquals(a, m_engine.Peek()));
-        Assert.IsTrue(a.gameObject.activeSelf);
-        Assert.IsFalse(other_a.gameObject.activeSelf);
+        Assert.IsTrue(ReferenceEquals(otherA, m_engine.Peek()));
+        Assert.IsFalse(a.gameObject.activeSelf);
+        Assert.IsTrue(otherA.gameObject.activeSelf);
         CollectionAssert.AreEqual(Array.Empty<string>(), a.Log);
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]
