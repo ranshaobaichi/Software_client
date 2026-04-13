@@ -48,7 +48,8 @@ namespace Tests.EditMode.Algorithms {
 
                 // --- 1. 生成所有节点 ---
                 for (int col = 0; col < columnCount; col++) {
-                    int rowCount = Random.Range(minRow, maxRow + 1);
+                    // 最后一列固定只生成一个 Boss 节点
+                    int rowCount = col == columnCount - 1 ? 1 : Random.Range(minRow, maxRow + 1);
                     List<MapNode> column = new List<MapNode>();
 
                     for (int row = 0; row < rowCount; row++) {
