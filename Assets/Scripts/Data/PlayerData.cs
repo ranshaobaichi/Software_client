@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using Constants;
 
 [Serializable]
 public class PlayerData {
@@ -10,9 +11,9 @@ public class PlayerData {
     public class PlayerBasicInfo {
         public string uid;
         public string name;
-        public int color;
+        public AvatarColorID color;
         
-        public PlayerBasicInfo(string uid = null, string name = null, int color = 0) {
+        public PlayerBasicInfo(string uid = null, string name = null, AvatarColorID color = 0) {
             this.uid = uid;
             this.name = name;
             this.color = color;

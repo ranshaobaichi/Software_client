@@ -24,8 +24,8 @@ namespace Tests.PlayMode.Network {
                 roomId = roomId,
                 maximumPeople = maximumPeople,
                 basicInfos = new List<PlayerData.PlayerBasicInfo> {
-                    new PlayerData.PlayerBasicInfo("u1", "player-1", 1),
-                    new PlayerData.PlayerBasicInfo("u2", "player-2", 2)
+                    new PlayerData.PlayerBasicInfo("u1", "player-1", (AvatarColorID)1),
+                    new PlayerData.PlayerBasicInfo("u2", "player-2", (AvatarColorID)2)
                 },
                 readyUids = new List<string>(readyUids ?? Array.Empty<string>())
             };
@@ -75,7 +75,7 @@ namespace Tests.PlayMode.Network {
                     basicInfo = new PlayerData.PlayerBasicInfo(
                         uid: request.uid,
                         name: "tester",
-                        color: 123)
+                        color: (AvatarColorID)123)
                 }
             };
             server.SendShortSuccess(loginResponse);
@@ -889,7 +889,7 @@ namespace Tests.PlayMode.Network {
                 code = (int)(ServerCode.SUCCESS | ServerCode.FAIL),
                 data = new LoginResponse {
                     playerData = new PlayerData {
-                        basicInfo = new PlayerData.PlayerBasicInfo("edge-bitmask", "n", 1)
+                        basicInfo = new PlayerData.PlayerBasicInfo("edge-bitmask", "n", (AvatarColorID)1)
                     }
                 },
                 message = ""

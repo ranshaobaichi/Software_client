@@ -8,7 +8,7 @@ public class PlayerSlot : MonoBehaviour
 
     public void SetData(string playerName, bool isReady)
     {
-        _nameText.text = playerName;
+        _nameText.text = $"uid:{playerName}";
         _readyStatusImage.color = isReady ? Color.green : Color.red;
     }
 }

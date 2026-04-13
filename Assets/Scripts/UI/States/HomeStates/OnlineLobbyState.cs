@@ -47,6 +47,7 @@ namespace UI.States {
         private void _OnCloseJoinRoomDialog(DialogResult result) {
             if (result.objVal != null) {
                 m_StateEngine.SendMessage<OnlineLobbyState, OnlineRoomState>(result.objVal);
+                m_StateEngine.SendMessage<OnlineLobbyState,MapState>(result.objVal);
                 m_StateEngine.AddTop<OnlineRoomState>();
             } else {
                 ToastManager.SInstance.ShowToast("加入房间失败，请重试");
