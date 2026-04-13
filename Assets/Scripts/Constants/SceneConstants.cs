@@ -1,6 +1,7 @@
 ﻿namespace Constants {
     public enum SceneType {
         LOGIN,
-        HOME
+        HOME,
+        BATTLE,
     }
 }

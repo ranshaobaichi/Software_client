@@ -346,7 +346,9 @@ MonoBehaviour:
   _homePageInfo:
     destoryWhenLeave: 0
     PageBase: {fileID: 889333604543009279, guid: 61a26879ba5c0c148b97ffc2fcab931f, type: 3}
-  _pages: []
+  _pages:
+  - destoryWhenLeave: 1
+    PageBase: {fileID: 3687834376418024044, guid: 1238293c9b257be48be991452802ea96, type: 3}
   _container: {fileID: 656795226}
   _camera: {fileID: 1467111262}
 --- !u!4 &2103074887
