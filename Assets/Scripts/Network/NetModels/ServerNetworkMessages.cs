@@ -4,23 +4,28 @@ using Constants;
 
 namespace Network.Messages {
     #region Client Message Types
+
     public abstract class ClientNetworkMessage {
         public int type;
     }
+
     #endregion
-    
+
     #region Server Message Types
-    public abstract class ServerNetworkMessages {}
+
+    public abstract class ServerNetworkMessages { }
+
     [Serializable]
-    public class ServerNetworkSuccessMessage : ServerNetworkMessages {}
+    public class ServerNetworkSuccessMessage : ServerNetworkMessages { }
+
     [Serializable]
-    public class ServerNetworkFailMessage : ServerNetworkMessages {}
+    public class ServerNetworkFailMessage : ServerNetworkMessages { }
 
     public class NetworkErrorMessage {
         public ServerCode code;
         public string message;
     }
-    
+
     /// <summary>
     /// Wire-format envelope for all server responses.
     /// Use <see cref="ServerEnvelope{T}"/> to deserialize data directly.
@@ -31,9 +36,11 @@ namespace Network.Messages {
         public T data;
         public string message;
     }
+
     #endregion
 
     #region Login Service
+
     [Serializable]
     public class LoginRequest : ClientNetworkMessage {
         public string uid;
@@ -43,49 +50,72 @@ namespace Network.Messages {
     public class LoginResponse : ServerNetworkSuccessMessage {
         public PlayerData playerData;
     }
-    
+
     [Serializable]
-    public class RegisterRequest : ClientNetworkMessage {
-    }
+    public class RegisterRequest : ClientNetworkMessage { }
 
     [Serializable]
     public class RegisterResponse : ServerNetworkSuccessMessage {
         public string uid;
     }
+
     #endregion
 
     #region Home Service
+
     [Serializable]
     public class CreateRoomRequest : ClientNetworkMessage {
         public string uid;
         public int maximumPeople;
     }
+
     [Serializable]
     public class CreateRoomResponse : ServerNetworkSuccessMessage {
         public int roomId;
     }
-    
+
     [Serializable]
     public class JoinRoomRequest : ClientNetworkMessage {
         public string uid;
         public int roomId;
     }
-    
+
     [Serializable]
-    public class RefreshRoomRequest : ClientNetworkMessage {}
+    public class RefreshRoomRequest : ClientNetworkMessage { }
+
     [Serializable]
     public class RoomInfo {
         public int roomId;
         public int maximumPeople;
         public List<PlayerData.PlayerBasicInfo> basicInfos;
     }
+
     [Serializable]
     public class RefreshRoomResponse : ServerNetworkSuccessMessage {
         public List<RoomInfo> infos;
     }
+
+    [Serializable]
+    public class EditProfileRequest : ClientNetworkMessage {
+        public string uid;
+        public AvatarColorID color;
+    }
+
+    [Serializable]
+    public class EditProfileResponse : ServerNetworkSuccessMessage {
+        public AvatarColorID color;
+    }
+
+    [Serializable]
+    public class SyncPlayerColor : ServerNetworkSuccessMessage {
+        public string uid;
+        public AvatarColorID color;
+    }
+
     #endregion
-    
+
     #region Sample Message Types
+
     [Serializable]
     public class NetPlayer {
         public string id;
@@ -118,5 +148,6 @@ namespace Network.Messages {
         public string id;
         public NetPlayer[] players;
     }
+
     #endregion
 }
