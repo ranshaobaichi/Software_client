@@ -71,7 +71,8 @@ public class GameSceneManager : MonoBehaviour {
     
     private readonly Dictionary<SceneType, string> m_sceneNameMap = new Dictionary<SceneType, string> {
         { SceneType.LOGIN, "LoginScene" },
-        { SceneType.HOME, "HomeScene" }
+        { SceneType.HOME, "HomeScene" },
+        { SceneType.BATTLE, "BattleScene" }
     };
     private Canvas m_fadeCanvas;
     private Image m_fadeImage;

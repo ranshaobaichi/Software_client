@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UI.Pages;
 using UI.StateEngine;
 
 namespace UI.States {
@@ -18,6 +19,11 @@ namespace UI.States {
 
         public void OnQuitButtonClicked() {
             m_StateEngine.TryRemoveTop();
+        }
+
+        public void TEST_SwitchToBattlePage() {
+            var pageFinder = new UIPageFinder();
+            pageFinder.Current(this).SwitchTo<BattlePage>();
         }
     }
 }
