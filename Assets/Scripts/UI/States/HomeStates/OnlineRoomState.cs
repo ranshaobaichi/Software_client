@@ -152,7 +152,7 @@ namespace UI.States {
 
             foreach (var player in roomInfo.basicInfos) {
                 var slotGo = Instantiate(_playerSlotPrefab, _playerListParent);
-                slotGo.SetData(player.name, m_playerReadyMap[player.uid]);
+                slotGo.SetData(player.uid, m_playerReadyMap[player.uid]);
                 m_playerSlots.Add(slotGo);
             }
         }

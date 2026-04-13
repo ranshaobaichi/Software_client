@@ -5,6 +5,7 @@ using Constants;
 using Network;
 using Network.Messages;
 using UI.StateEngine;
+using UI.States;
 using UI.ViewModels;
 
 public class ShopState : StateBase {

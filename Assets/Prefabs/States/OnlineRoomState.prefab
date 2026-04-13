@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1767104476174430174}
   - component: {fileID: 4053553626448742429}
   m_Layer: 5
-  m_Name: TEST_ready
+  m_Name: ready
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 378}
+  m_AnchoredPosition: {x: 0, y: 224}
   m_SizeDelta: {x: 715.0542, y: 110.67651}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3743511182062632114
@@ -151,7 +151,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8182390144333925617
 RectTransform:
   m_ObjectHideFlags: 0
@@ -556,7 +556,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: ButtonTEST_ready
+  m_Text: Ready
 --- !u!1 &5168961811030998757
 GameObject:
   m_ObjectHideFlags: 0
@@ -713,7 +713,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _roomIdText: {fileID: 6416888787612674136}
-  _readyStatusImage: {fileID: 0}
   _playerListParent: {fileID: 5548042199043582135}
   _playerSlotPrefab: {fileID: 7860600214753519837, guid: b4b772f856720654685ff1644590176f, type: 3}
 --- !u!1 &6296647679532973962

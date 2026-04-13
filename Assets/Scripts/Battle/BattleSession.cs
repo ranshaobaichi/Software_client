@@ -99,7 +99,12 @@ namespace Battle {
         private string m_waitingStatusRawText = string.Empty;
 
         #endregion
-
+        
+        #region Heartbeat Control 
+        private Coroutine m_readyCoroutine;
+        private bool m_readyLoopRunning;
+        #endregion
+        
         #region BattleInfo (F4)
 
         public static void SetPendingBattleInfo(BattleInfo info) {
@@ -129,28 +134,29 @@ namespace Battle {
             Channel?.Connect();
             _ResetPacketStats();
 
-            BattleNetLog.Log($"Connect battle channel → {NetworkConstants.DefaultHost}:{NetworkConstants.BattlePort}");
-
             if (Channel == null || !Channel.IsConnected) {
-                Debug.LogWarning("[BattleSession] Channel not ready for PlayerReadyRequest.");
+                Debug.LogWarning("[BattleSession] Channel not ready.");
                 return;
             }
 
-            Channel.Send(new PlayerReadyRequest {
-                    type = (int)BattleRequestType.PLAYER_READY,
-                    uid = PlayerData.SInstance.basicInfo.uid
-            });
-            ReportPacketSent();
-
             if (_waitingStatusPanel != null) {
                 _waitingStatusPanel.SetActive(true);
+            }
+            
+            if (!m_readyLoopRunning) {
+                m_readyCoroutine = StartCoroutine(_ReadyLoop());
+                m_readyLoopRunning = true;
             }
         }
 
         private void OnDisable() {
             BattleNetLog.Log("Disconnect battle channel (OnDisable)");
+
+            StopReadyLoop();
+
             Channel?.Disconnect();
         }
+
 
         private void OnDestroy() {
             if (s_instance == this) {
@@ -184,6 +190,38 @@ namespace Battle {
 
         private void LateUpdate() {
             _PublishSyncSnapshot();
+        }
+
+        #endregion
+        #region 
+
+        private IEnumerator _ReadyLoop() {
+            while (true) {
+                
+                if (m_isGameStart) {
+                    yield break; 
+                }
+
+                if (Channel != null && Channel.IsConnected) {
+                    Channel.Send(new PlayerReadyRequest {
+                            type = (int)BattleRequestType.PLAYER_READY,
+                            uid = PlayerData.SInstance.basicInfo.uid
+                    });
+
+                    ReportPacketSent();
+                }
+
+                yield return new WaitForSeconds(1f);
+            }
+        }
+
+        private void StopReadyLoop() {
+            if (m_readyCoroutine != null) {
+                StopCoroutine(m_readyCoroutine);
+                m_readyCoroutine = null;
+            }
+
+            m_readyLoopRunning = false;
         }
 
         #endregion
