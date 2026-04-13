@@ -18,8 +18,8 @@ namespace Tests.PlayMode.Business {
                 roomId = roomId,
                 maximumPeople = maximumPeople,
                 basicInfos = new List<PlayerData.PlayerBasicInfo> {
-                    new PlayerData.PlayerBasicInfo("u1", "p1", 1),
-                    new PlayerData.PlayerBasicInfo("u2", "p2", 2)
+                    new PlayerData.PlayerBasicInfo("u1", "p1", (AvatarColorID)1),
+                    new PlayerData.PlayerBasicInfo("u2", "p2", (AvatarColorID)2)
                 },
                 readyUids = new List<string>(readyUids ?? System.Array.Empty<string>())
             };

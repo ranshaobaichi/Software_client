@@ -62,8 +62,8 @@ public class ShopState : StateBase {
         m_channel = null;
     }
     
-    public void TEST_SwitchToBattle() {
-        GameSceneManager.SInstance.SwitchScene(SceneType.BATTLE);
+    public void TEST_SwitchToMap() {
+        m_StateEngine.AddTop<MapState>();
     }
     
     #region ===== 发送 =====

@@ -24,7 +24,7 @@ namespace Tests.PlayMode.Business {
         /// </summary>
         protected static void SeedLoggedInPlayer(string uid, string displayName = "LobbyTester", int color = 3) {
             PlayerData.Init(new PlayerData {
-                basicInfo = new PlayerData.PlayerBasicInfo(uid, displayName, color)
+                basicInfo = new PlayerData.PlayerBasicInfo(uid, displayName ,(AvatarColorID)color)
             });
         }
 

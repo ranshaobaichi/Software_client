@@ -151,7 +151,15 @@ namespace Network.Messages {
     public class RefreshRoomResponse : ServerNetworkSuccessMessage {
         public List<RoomInfo> roomInfos;
     }
-
+    [Serializable]
+    public class EditProfileRequest : ClientNetworkMessage {
+        public string uid;
+        public PlayerData.PlayerBasicInfo basicInfo;
+    }
+    [Serializable]
+    public class EditProfileResponse : ServerNetworkSuccessMessage {
+     
+    }
     #endregion
 
     #endregion
@@ -260,7 +268,48 @@ namespace Network.Messages {
     }
 
     #endregion
+    #region Map Service
+    [Serializable]
+    public class MapNode {
+        public int nodeId;
+        public NodeType type;
+        public List<int> nextId;
+    }
+    
+    [Serializable]
+    public class MapInitRequest
+    {
+        public int type;   // MAP_INIT
+        public int roomId;
+        public string uid;
+    }
 
+    [Serializable]
+    public class MapMoveRequest
+    {
+        public int type;
+        public string uid;
+        public int selectId;
+    }
+    [Serializable]
+    public class MapInitResponse
+    {
+        public List<MapNode> map;
+    }
+
+    [Serializable]
+    public class MapSyncResponse
+    {
+        public MapSync[] selectStatus;
+    }
+
+    [Serializable]
+    public class MapSync
+    {
+        public string uid;
+        public int selectId;
+    }
+    #endregion
     #endregion
 
     #region Sample Message Types
