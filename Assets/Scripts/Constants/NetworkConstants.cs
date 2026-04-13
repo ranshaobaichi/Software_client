@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Constants {
     public static class NetworkConstants {
@@ -40,7 +42,29 @@ namespace Constants {
 
     #region PlayerData Service
 
-    public enum PlayerAvatarColor { }
+    public class PlayerAvatarColor {
+        public string uid;
+        public AvatarColorID color;
+    }
+
+    public static class AvatarColorConfig {
+        private static readonly Dictionary<AvatarColorID, Color> s_colors = new() {
+                { AvatarColorID.WHITE, Color.white },
+                { AvatarColorID.RED, Color.red },
+                { AvatarColorID.GREEN, Color.green },
+                { AvatarColorID.BLUE, Color.blue },
+                { AvatarColorID.YELLOW, Color.yellow },
+                { AvatarColorID.MAGENTA, Color.magenta },
+                { AvatarColorID.CYAN, Color.cyan }
+        };
+
+        public static Color GetColor(AvatarColorID id) {
+            return s_colors.TryGetValue(id, out var color)
+                    ? color
+                    : Color.white;
+        }
+    }
+
 
     #endregion
 
@@ -50,6 +74,20 @@ namespace Constants {
         LOGIN = 0,
         REGISTER = 1,
         LOGOUT = 2,
+    }
+
+    #endregion
+    #region Avatar Color
+
+    [Serializable]
+    public enum AvatarColorID {
+        WHITE = 0,
+        RED = 1,
+        GREEN = 2,
+        BLUE = 3,
+        YELLOW = 4,
+        MAGENTA = 5,
+        CYAN = 6
     }
 
     #endregion
@@ -69,7 +107,28 @@ namespace Constants {
     }
 
     #endregion
+    #region Map Service
 
+    public enum MapRequestType {
+        MAP_INIT = 0,
+        MAP_MOVE = 1,
+    };
+
+    public enum MapResponseType {
+        MAP_INIT = 0,
+        MAP_SYNC = 1,
+    };
+
+    public enum NodeType {
+        NORMAL = 0,
+        ELITE = 1,
+        EVENT = 2,
+        BOSS = 3
+    }
+
+
+
+    #endregion
     #region Shop Service
 
     public enum ShopRequestType {

@@ -188,11 +188,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _initState:
-    parent: {fileID: 5156787371501642088}
-    state: {fileID: 7856232819359646198, guid: 16a29f919cf90cb4c8e1894bf9da67c9, type: 3}
+    parent: {fileID: 4054064605571263074}
+    state: {fileID: 3756939922175833009, guid: 9f3eb01a440e53144bbc403f4fd667e0, type: 3}
   _registrations:
   - parent: {fileID: 4054064605571263074}
     state: {fileID: 3756939922175833009, guid: 9f3eb01a440e53144bbc403f4fd667e0, type: 3}
+  - parent: {fileID: 5156787371501642088}
+    state: {fileID: 7856232819359646198, guid: 16a29f919cf90cb4c8e1894bf9da67c9, type: 3}
 --- !u!114 &3687834376418024044
 MonoBehaviour:
   m_ObjectHideFlags: 0

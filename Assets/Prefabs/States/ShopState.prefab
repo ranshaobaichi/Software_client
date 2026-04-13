@@ -121,8 +121,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 3756939922175833009}
-        m_TargetAssemblyTypeName: UI.States.ShopState, Assembly-CSharp
-        m_MethodName: TEST_SwitchToBattle
+        m_TargetAssemblyTypeName: ShopState, UI
+        m_MethodName: TEST_SwitchToMap
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

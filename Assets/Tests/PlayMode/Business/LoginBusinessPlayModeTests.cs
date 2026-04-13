@@ -49,7 +49,7 @@ namespace Tests.PlayMode.Business {
 
             server.SendShortSuccess(new LoginResponse {
                 playerData = new PlayerData {
-                    basicInfo = new PlayerData.PlayerBasicInfo(uid, "Tester", 7)
+                    basicInfo = new PlayerData.PlayerBasicInfo(uid, "Tester", (AvatarColorID)7)
                 }
             });
 
@@ -112,7 +112,7 @@ namespace Tests.PlayMode.Business {
             yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "First login request missing.");
             server.SendShortSuccess(new LoginResponse {
                 playerData = new PlayerData {
-                    basicInfo = new PlayerData.PlayerBasicInfo("same-uid-user", "First", 1)
+                    basicInfo = new PlayerData.PlayerBasicInfo("same-uid-user", "First", (AvatarColorID)1)
                 }
             });
             yield return WaitUntil(() => PlayerData.IsInit(), 2f, "First login did not init.");
@@ -121,7 +121,7 @@ namespace Tests.PlayMode.Business {
             yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Second login request missing.");
             server.SendShortSuccess(new LoginResponse {
                 playerData = new PlayerData {
-                    basicInfo = new PlayerData.PlayerBasicInfo("same-uid-user", "SecondSession", 2)
+                    basicInfo = new PlayerData.PlayerBasicInfo("same-uid-user", "SecondSession", (AvatarColorID)2)
                 }
             });
             yield return WaitUntil(
