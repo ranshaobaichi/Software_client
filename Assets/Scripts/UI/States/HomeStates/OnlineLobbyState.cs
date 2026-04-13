@@ -20,6 +20,7 @@ namespace UI.States {
         private UIPageFinder m_pageFinder;
 
         #region Button Callbacks
+
         public void OnCreateRoomButtonClicked() {
             m_pageFinder.Current(this).GetDialogMgr().OpenDialog<CreateRoomDialog>(onClose: _OnCloseCreateRoomDialog);
         }
@@ -35,7 +36,10 @@ namespace UI.States {
                     .OpenDialog<JoinRoomDialog>(input: roomModel, onClose: _OnCloseJoinRoomDialog);
         }
 
-        public void OnLeaveRoomButtonClicked() { m_StateEngine.TryRemoveTop(); }
+        public void OnLeaveRoomButtonClicked() {
+            m_StateEngine.TryRemoveTop();
+        }
+
         #endregion
 
         private void _OnCloseJoinRoomDialog(DialogResult result) {
@@ -70,7 +74,7 @@ namespace UI.States {
                 Destroy(_roomItemParent.GetChild(i).gameObject);
             }
 
-            foreach (var info in refreshRoomResponse.infos) {
+            foreach (var info in refreshRoomResponse.roomInfos) {
                 var roomModel = new RoomModel(info.roomId, info.maximumPeople, info.basicInfos);
                 var roomItem = Instantiate(_roomItemPrefab, _roomItemParent);
                 var viewmodel = new RoomItemViewModel(roomModel);

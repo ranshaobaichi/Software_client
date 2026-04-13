@@ -6,7 +6,7 @@ using UI.StateEngine;
 namespace UI.States {
     public class OnlineRoomState : StateBase {
         private int m_roomID;
-        
+
         public override void ReceiveMessage(Dictionary<Type, object> messages) {
             if (messages == null) {
                 return;
