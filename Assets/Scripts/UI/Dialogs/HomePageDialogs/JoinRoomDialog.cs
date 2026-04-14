@@ -40,8 +40,7 @@ namespace UI.Dialogs.HomePageDialogs {
                 for (var i = 0; i < _playerAvatarImages.Count; i++) {
                     _playerAvatarImages[i].gameObject.SetActive(i < input.currentPlayersCount);
                 }
-            }
-            else {
+            } else {
                 m_inputRoomId = -1;
                 _roomHeadCountText.text = "";
                 foreach (var playerAvatarImage in _playerAvatarImages) {
@@ -50,9 +49,9 @@ namespace UI.Dialogs.HomePageDialogs {
             }
         }
 
-        private void _OnJoinRoomSuccess(ServerNetworkSuccessMessage response) => Close(true);
-        private void _OnJoinRoomFail(ServerNetworkFailMessage response) => Close(false);
-        private void _OnJoinRoomError(NetworkErrorMessage error) => Close(false);
+        private void _OnJoinRoomSuccess(JoinRoomResponse response) => Close(response.roomInfo);
+        private void _OnJoinRoomFail(ServerNetworkFailMessage response) => Close(null);
+        private void _OnJoinRoomError(NetworkErrorMessage error) => Close(null);
 
         private void _SendJoinRoomRequest() {
             if (m_inputRoomId <= 0) {
@@ -66,7 +65,7 @@ namespace UI.Dialogs.HomePageDialogs {
                     uid = PlayerData.SInstance.basicInfo.uid
             };
             NetworkManager.SInstance
-                    .SendShortRequest<JoinRoomRequest, ServerNetworkSuccessMessage, ServerNetworkFailMessage>(
+                    .SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
                             NetworkConstants.HomePort, request, _OnJoinRoomSuccess, _OnJoinRoomFail,
                             onError: _OnJoinRoomError
                     );
