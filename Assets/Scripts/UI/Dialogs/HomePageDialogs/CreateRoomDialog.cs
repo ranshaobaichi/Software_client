@@ -36,13 +36,13 @@ namespace UI.Dialogs.HomePageDialogs {
             _maxPlayerNumText.text = "";
         }
 
-        private void _OnCreateRoomSuccess(CreateRoomResponse response) => Close(response.roomId);
+        private void _OnCreateRoomSuccess(CreateRoomResponse response) => Close(response.roomInfo);
 
         private void _OnCreateRoomFail(ServerNetworkFailMessage response) {
             ToastManager.SInstance.ShowToast("创建房间失败");
-            Close(false);
+            Close(null);
         }
 
-        private void _OnCreateRoomError(NetworkErrorMessage error) => Close(false);
+        private void _OnCreateRoomError(NetworkErrorMessage error) => Close(null);
     }
 }

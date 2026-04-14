@@ -21,7 +21,7 @@ namespace UI.ViewModels {
             };
             NetworkManager.SInstance.SendShortRequest<LoginRequest, LoginResponse, ServerNetworkFailMessage>(
                     NetworkConstants.LoginPort, request, _OnLoginResponseSuccess, _OnLoginResponseFail,
-                    onError: _OnLoginResponseError);
+                    onError: _OnLoginResponseError, blockOnConnect: true);
         }
 
         private void _OnLoginResponseSuccess(LoginResponse response) {
