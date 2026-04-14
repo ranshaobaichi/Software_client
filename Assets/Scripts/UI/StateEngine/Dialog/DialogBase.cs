@@ -23,6 +23,9 @@ namespace UI.Dialog {
             m_onClose?.Invoke(result);
             Destroy(gameObject);
         }
+        
+        protected void Close(object value) => Close(DialogResult.FromObject(value));
+
         public void Close() => Close(DialogResult.Empty);
 
         internal void Framework_Init(int dialogId, Action<DialogResult> onClose, object input, Texture2D blurTex, Sprite blur) {

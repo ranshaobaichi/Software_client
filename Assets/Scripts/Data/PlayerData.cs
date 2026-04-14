@@ -43,5 +43,10 @@ public class PlayerData {
         s_mIsInit = true;
         s_instance = playerData;
     }
+    
+    public static void Clear() {
+        s_mIsInit = false;
+        s_instance = null;
+    }
     #endregion
 }

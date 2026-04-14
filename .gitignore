@@ -81,6 +81,12 @@ sysinfo.txt
 Assets/TODO.md
 
 ########################
+# Cursor / agent workspace outputs
+########################
+
+.workspace/
+
+########################
 # Specific to this project
 ########################
 
