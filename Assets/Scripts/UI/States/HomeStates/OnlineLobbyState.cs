@@ -35,9 +35,7 @@ namespace UI.States {
                     .OpenDialog<JoinRoomDialog>(input: roomModel, onClose: _OnCloseJoinRoomDialog);
         }
 
-        public void OnLeaveRoomButtonClicked() {
-            m_StateEngine.TryRemoveTop();
-        }
+        public void OnLeaveRoomButtonClicked() { m_StateEngine.TryRemoveTop(); }
         #endregion
 
         private void _OnCloseJoinRoomDialog(DialogResult result) {

@@ -8,11 +8,12 @@ namespace UI.SampleScene {
         [SerializeField]
         private TestInitView _view;
 
+        private TestInitViewModel m_viewModel;
+
         protected override void OnEnter() {
             base.OnEnter();
-            var viewModel = new TestInitViewModel();
-            _view.SetViewModel(viewModel);
-            _view.Render(-1);
+            m_viewModel = new TestInitViewModel();
+            MVVMFactory.Bind(_view, m_viewModel);
         }
 
         public override void ReceiveMessage(Dictionary<Type, object> messages) {
@@ -21,7 +22,7 @@ namespace UI.SampleScene {
             }
 
             if (messages.TryGetValue(typeof(TestState1), out var numberObj) && numberObj is int number) {
-                _view.Render(number);
+                m_viewModel.SetState1Number(number);
             }
         }
     }

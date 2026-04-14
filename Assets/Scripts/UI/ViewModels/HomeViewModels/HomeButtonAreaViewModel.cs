@@ -1,5 +1,5 @@
 ﻿namespace UI.ViewModels {
-    public class HomeButtonAreaViewModel {
+    public class HomeButtonAreaViewModel : ViewModelBase<HomeButtonAreaViewModel> {
         
     }
 }
