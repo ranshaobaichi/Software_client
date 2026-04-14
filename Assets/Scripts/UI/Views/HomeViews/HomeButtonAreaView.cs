@@ -4,12 +4,12 @@ using UI.States;
 using UI.ViewModels;
 
 namespace UI.Views {
-    public class HomeButtonAreaView : MonoBehaviour {
-        private HomeButtonAreaViewModel m_areaViewModel;
+    public class HomeButtonAreaView : ViewBase<HomeButtonAreaViewModel> {
         private UIStateFinder m_stateFinder;
-        
-        public void SetViewModel(HomeButtonAreaViewModel areaViewModel) {
-            m_areaViewModel = areaViewModel;
+
+        protected override void Init() {
+            base.Init();
+            m_stateFinder = new UIStateFinder();
         }
 
         #region Button Callbacks
