@@ -8,7 +8,6 @@ using UI.Models;
 using UI.StateEngine;
 using UI.ViewModels;
 using UI.Views;
-using Utils;
 
 namespace UI.States {
     public class OnlineLobbyState : StateBase {
@@ -39,26 +38,21 @@ namespace UI.States {
         public void OnLeaveRoomButtonClicked() { m_StateEngine.TryRemoveTop(); }
         #endregion
 
-        protected override void OnResume() {
-            base.OnResume();
-            _RefreshRoomList();
-        }
-
         private void _OnCloseJoinRoomDialog(DialogResult result) {
-            if (result.objVal != null) {
-                m_StateEngine.SendMessage<OnlineLobbyState, OnlineRoomState>(result.objVal);
+            if (result.intVal == 1) {
                 m_StateEngine.AddTop<OnlineRoomState>();
-            } else {
-                ToastManager.SInstance.ShowToast("加入房间失败，请重试");
+            }
+            else if (result.intVal == 0) {
                 _RefreshRoomList();
             }
         }
 
         private void _OnCloseCreateRoomDialog(DialogResult result) {
-            if (result.objVal != null) {
-                m_StateEngine.SendMessage<OnlineLobbyState, OnlineRoomState>(result.objVal);
+            if (result.intVal != 0) {
+                m_StateEngine.SendMessage<OnlineLobbyState, OnlineRoomState>(result.intVal);
                 m_StateEngine.AddTop<OnlineRoomState>();
-            } else {
+            }
+            else if (result.intVal == 0) {
                 _RefreshRoomList();
             }
         }
@@ -68,19 +62,20 @@ namespace UI.States {
                     type = (int)HomeRequestType.LIST_ROOMS,
             };
             NetworkManager.SInstance.SendShortRequestWithSuccess<RefreshRoomRequest, RefreshRoomResponse>(
-                    NetworkConstants.HomePort, request,
-                    refreshRoomResponse => {
-                        for (var i = _roomItemParent.childCount - 1; i >= 0; i--) {
-                            Destroy(_roomItemParent.GetChild(i).gameObject);
-                        }
+                    NetworkConstants.HomePort, request, _RenderRoomList);
+        }
 
-                        foreach (var info in refreshRoomResponse.roomInfos) {
-                            var roomModel = new RoomModel(info.roomId, info.maximumPeople, info.basicInfos);
-                            var roomItem = Instantiate(_roomItemPrefab, _roomItemParent);
-                            var viewmodel = new RoomItemViewModel(roomModel);
-                            roomItem.Init(viewmodel, OnRoomItemClicked);
-                        }
-                    });
+        private void _RenderRoomList(RefreshRoomResponse refreshRoomResponse) {
+            for (var i = _roomItemParent.childCount - 1; i >= 0; i--) {
+                Destroy(_roomItemParent.GetChild(i).gameObject);
+            }
+
+            foreach (var info in refreshRoomResponse.infos) {
+                var roomModel = new RoomModel(info.roomId, info.maximumPeople, info.basicInfos);
+                var roomItem = Instantiate(_roomItemPrefab, _roomItemParent);
+                var viewmodel = new RoomItemViewModel(roomModel);
+                roomItem.Init(viewmodel, OnRoomItemClicked);
+            }
         }
     }
 }

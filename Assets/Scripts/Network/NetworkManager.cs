@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Constants;
 using Network.Messages;
 
@@ -46,8 +45,6 @@ namespace Network {
                 new List<(INetworkChannel channel, float deadline, Action onTimeout)>();
 
         private readonly object m_shortRequestLock = new object();
-        private readonly Queue<Action> m_mainThreadActions = new Queue<Action>();
-        private readonly object m_mainThreadActionsLock = new object();
         #endregion
 
         #region Unity Lifecycle
@@ -66,12 +63,10 @@ namespace Network {
         private void OnDestroy() {
             if (s_instance == this)
                 s_instance = null;
-            
             DisconnectAll();
         }
 
         private void Update() {
-            FlushMainThreadActions();
             PumpAll();
             PruneShortRequestTimeouts();
         }
@@ -86,38 +81,17 @@ namespace Network {
             // Debug.LogWarning("[NetworkManager] Service Failure: " + (failMsg != null ? failMsg.ToString() : "null"));
         }
 
-        private static void DefaultOnTimeoutAction() { Debug.LogError("[NetworkManager] Timeout"); }
+        private static void DefaultOnTimeoutAction() {
+            Debug.LogError("[NetworkManager] Timeout");
+        }
 
         private static void DefaultOnErrorAction(NetworkErrorMessage errorMsg) {
             Debug.LogError($"[NetworkManager] Error: {errorMsg.code} - {errorMsg.message}");
         }
-
-        /// <summary>
-        /// Creates a dispatch entry from a strongly typed handler, wrapping type conversion internally.
-        /// </summary>
-        public static LongConnectionMainDispatchEntry CreateDispatchEntry<TData>(Action<TData> handler)
-                where TData : class {
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
-            return new LongConnectionMainDispatchEntry(typeof(TData), payload => {
-                if (payload is TData typed) {
-                    handler(typed);
-                    return;
-                }
-
-                if (payload == null) {
-                    handler(null);
-                    return;
-                }
-
-                throw new InvalidCastException(
-                        $"Payload type mismatch. Expected {typeof(TData).FullName}, got {payload.GetType().FullName}.");
-            });
-        }
         #endregion
 
         /// <summary>
-        /// Creates a TCP channel tracked by this manager, using a single <see cref="INetworkChannel.RegisterHandler{T}"/> path
-        /// (no <see cref="LongConnectionDispatchTables"/>). Use <see cref="CreateLongConnection"/> when inbound frames use <see cref="Messages.LongEnvelope{T}"/> dispatch.
+        /// Common connection factory method.
         /// </summary>
         /// <param name="framer">[Can Be Null]</param>
         /// <param name="serializer">[Can Be Null]</param>
@@ -129,56 +103,6 @@ namespace Network {
             var framerToUse = framer ?? m_defaultFramer ?? new LineFramer();
             var serializerToUse = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();
             var channel = new TcpConnectionChannel(host, port, framerToUse, serializerToUse);
-            lock (m_channelsLock) {
-                m_channels.Add(channel);
-            }
-
-            return channel;
-        }
-
-        /// <summary>
-        /// Creates a long-lived TCP channel with inbound dispatch: main outer <c>type</c> maps to a typed <see cref="Messages.LongEnvelope{T}"/> <c>data</c> handler;
-        /// <see cref="Messages.LongEnvelope{T}.pushMessages"/> ints map to lightweight push handlers.
-        /// </summary>
-        /// <typeparam name="TMainOpcode">Business enum for wire <c>type</c> (underlying int keys are used internally).</typeparam>
-        public INetworkChannel CreateLongConnection<TMainOpcode>(
-                string host,
-                int port,
-                IReadOnlyDictionary<TMainOpcode, LongConnectionMainDispatchEntry> mainHandlers,
-                IReadOnlyDictionary<int, Action> pushHandlers,
-                bool dispatchPushWhenMainTypeUnknown = true,
-                IMessageFramer framer = null,
-                IMessageSerializer serializer = null
-        )
-                where TMainOpcode : struct {
-            if (!typeof(TMainOpcode).IsEnum)
-                throw new ArgumentException("TMainOpcode must be an enum", nameof(TMainOpcode));
-            var mainInt = new Dictionary<int, LongConnectionMainDispatchEntry>(mainHandlers.Count);
-            foreach (var kv in mainHandlers)
-                mainInt[Convert.ToInt32(kv.Key)] = kv.Value;
-
-            return CreateLongConnection(host, port, mainInt, pushHandlers, dispatchPushWhenMainTypeUnknown, framer,
-                    serializer);
-        }
-
-        /// <summary>
-        /// Creates a long-lived TCP channel with inbound dispatch keyed by outer wire <c>type</c> as <see cref="int"/>.
-        /// </summary>
-        public INetworkChannel CreateLongConnection(
-                string host,
-                int port,
-                IReadOnlyDictionary<int, LongConnectionMainDispatchEntry> mainHandlers,
-                IReadOnlyDictionary<int, Action> pushHandlers,
-                bool dispatchPushWhenMainTypeUnknown = true,
-                IMessageFramer framer = null,
-                IMessageSerializer serializer = null
-        ) {
-            if (mainHandlers == null) throw new ArgumentNullException(nameof(mainHandlers));
-            if (pushHandlers == null) throw new ArgumentNullException(nameof(pushHandlers));
-            var tables = new LongConnectionDispatchTables(mainHandlers, pushHandlers, dispatchPushWhenMainTypeUnknown);
-            var framerToUse = framer ?? m_defaultFramer ?? new LineFramer();
-            var serializerToUse = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();
-            var channel = new TcpConnectionChannel(host, port, framerToUse, serializerToUse, tables);
             lock (m_channelsLock) {
                 m_channels.Add(channel);
             }
@@ -205,15 +129,14 @@ namespace Network {
                 TRequest request,
                 string host = NetworkConstants.DefaultHost,
                 Action<NetworkErrorMessage> onError = null,
-                float timeoutSeconds = 3f,
-                bool blockOnConnect = false,
+                float timeoutSeconds = 5f,
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         )
                 where TRequest : ClientNetworkMessage {
             SendShortRequest<TRequest, ServerNetworkSuccessMessage, ServerNetworkFailMessage>
             (port, request, DefaultOnServiceSuccessAction, DefaultOnServiceFailAction, host,
-                    timeoutSeconds, onError, blockOnConnect, framer, serializer);
+                    timeoutSeconds, onError, framer, serializer);
         }
 
         public void SendShortRequestWithSuccess<TRequest, TSuccessResponse>(
@@ -222,8 +145,7 @@ namespace Network {
                 Action<TSuccessResponse> onSuccess,
                 string host = NetworkConstants.DefaultHost,
                 Action<NetworkErrorMessage> onError = null,
-                float timeoutSeconds = 3f,
-                bool blockOnConnect = false,
+                float timeoutSeconds = 5f,
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         )
@@ -231,17 +153,16 @@ namespace Network {
                 where TSuccessResponse : ServerNetworkSuccessMessage {
             SendShortRequest<TRequest, TSuccessResponse, ServerNetworkFailMessage>
             (port, request, onSuccess, DefaultOnServiceFailAction, host,
-                    timeoutSeconds, onError, blockOnConnect, framer, serializer);
+                    timeoutSeconds, onError, framer, serializer);
         }
-
+        
         public void SendShortRequestWithFailure<TRequest, TFailureResponse>(
                 int port,
                 TRequest request,
                 Action<TFailureResponse> onFailure,
                 string host = NetworkConstants.DefaultHost,
                 Action<NetworkErrorMessage> onError = null,
-                float timeoutSeconds = 3f,
-                bool blockOnConnect = false,
+                float timeoutSeconds = 5f,
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         )
@@ -249,12 +170,12 @@ namespace Network {
                 where TFailureResponse : ServerNetworkFailMessage {
             SendShortRequest<TRequest, ServerNetworkSuccessMessage, TFailureResponse>
             (port, request, DefaultOnServiceSuccessAction, onFailure, host,
-                    timeoutSeconds, onError, blockOnConnect, framer, serializer);
+                    timeoutSeconds, onError, framer, serializer);
         }
 
         /// <summary>
         /// Send a request and wait for a single response, using a short-lived connection.
-        /// Deserializes the server envelope directly as <see cref="ShortEnvelope{T}"/>,
+        /// Deserializes the server envelope directly as <see cref="ServerEnvelope{T}"/>,
         /// where <c>T</c> is the concrete success/failure response type.
         /// </summary>
         public void SendShortRequest<TRequest, TSuccessResponse, TFailureResponse>(
@@ -263,9 +184,8 @@ namespace Network {
                 Action<TSuccessResponse> onSuccess,
                 Action<TFailureResponse> onFailure,
                 string host = NetworkConstants.DefaultHost,
-                float timeoutSeconds = 3f,
+                float timeoutSeconds = 5f,
                 Action<NetworkErrorMessage> onError = null,
-                bool blockOnConnect = false,
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         )
@@ -292,8 +212,8 @@ namespace Network {
                         return;
                     }
 
-                    var envelopeProbe = s.Deserialize(rawBytes, typeof(ShortEnvelope<ServerNetworkSuccessMessage>))
-                            as ShortEnvelope<ServerNetworkSuccessMessage>;
+                    var envelopeProbe = s.Deserialize(rawBytes, typeof(ServerEnvelope<ServerNetworkSuccessMessage>))
+                            as ServerEnvelope<ServerNetworkSuccessMessage>;
                     if (envelopeProbe == null) {
                         onError?.Invoke(new NetworkErrorMessage {
                                 code = ServerCode.DESERIALIZE_ERROR,
@@ -306,33 +226,38 @@ namespace Network {
                     var code = (ServerCode)envelopeProbe.code;
                     if ((code & ServerCode.SERVICE_SUCCESS) != 0) {
                         try {
-                            var typedEnvelope = s.Deserialize(rawBytes, typeof(ShortEnvelope<TSuccessResponse>))
-                                    as ShortEnvelope<TSuccessResponse>;
+                            var typedEnvelope = s.Deserialize(rawBytes, typeof(ServerEnvelope<TSuccessResponse>))
+                                    as ServerEnvelope<TSuccessResponse>;
                             onSuccess?.Invoke(typedEnvelope?.data);
-                        } catch (Exception ex) {
+                        }
+                        catch (Exception ex) {
                             onError?.Invoke(new NetworkErrorMessage {
                                     code = ServerCode.DESERIALIZE_ERROR,
                                     message = ex.Message
                             });
                         }
-                    } else if ((code & ServerCode.SERVICE_FAIL) != 0) {
+                    }
+                    else if ((code & ServerCode.SERVICE_FAIL) != 0) {
                         try {
-                            var typedEnvelope = s.Deserialize(rawBytes, typeof(ShortEnvelope<TFailureResponse>))
-                                    as ShortEnvelope<TFailureResponse>;
+                            var typedEnvelope = s.Deserialize(rawBytes, typeof(ServerEnvelope<TFailureResponse>))
+                                    as ServerEnvelope<TFailureResponse>;
                             onFailure?.Invoke(typedEnvelope?.data);
-                        } catch (Exception ex) {
+                        }
+                        catch (Exception ex) {
                             onError?.Invoke(new NetworkErrorMessage {
                                     code = ServerCode.DESERIALIZE_ERROR,
                                     message = ex.Message
                             });
                         }
-                    } else {
+                    }
+                    else {
                         onError?.Invoke(new NetworkErrorMessage {
                                 code = code,
                                 message = envelopeProbe.message ?? "Unknown error"
                         });
                     }
-                } finally {
+                }
+                finally {
                     RemoveConnection(ch);
                 }
             });
@@ -345,13 +270,10 @@ namespace Network {
                 m_shortRequestPending.Add((ch, Time.time + timeoutSeconds, DefaultOnTimeoutAction));
             }
 
-            if (blockOnConnect) {
-                ch.Connect();
-                if (ch.IsConnected) {
-                    ch.Send(request);
-                    return;
-                }
-
+            ch.Connect();
+            if (ch.IsConnected)
+                ch.Send(request);
+            else {
                 RemoveConnection(ch);
                 lock (m_shortRequestLock) {
                     RemoveShortRequestPending(ch);
@@ -361,37 +283,7 @@ namespace Network {
                         code = ServerCode.CONNECTION_ERROR,
                         message = "Failed to connect"
                 });
-                return;
             }
-
-            // Run connect in a worker thread so the main thread is never blocked by OS-level TCP connect timeout.
-            ThreadPool.QueueUserWorkItem(_ => {
-                ch.Connect();
-                EnqueueMainThreadAction(() => {
-                    // The request may already be timed out/cancelled before async connect finishes.
-                    if (!IsShortRequestPending(ch)) {
-                        if (ch.IsConnected)
-                            RemoveConnection(ch);
-
-                        return;
-                    }
-
-                    if (ch.IsConnected) {
-                        ch.Send(request);
-                        return;
-                    }
-
-                    RemoveConnection(ch);
-                    lock (m_shortRequestLock) {
-                        RemoveShortRequestPending(ch);
-                    }
-
-                    onError(new NetworkErrorMessage {
-                            code = ServerCode.CONNECTION_ERROR,
-                            message = "Failed to connect"
-                    });
-                });
-            });
         }
         #endregion
 
@@ -400,43 +292,6 @@ namespace Network {
                 if (m_shortRequestPending[i].channel == ch) {
                     m_shortRequestPending.RemoveAt(i);
                     return;
-                }
-            }
-        }
-
-        private bool IsShortRequestPending(INetworkChannel ch) {
-            lock (m_shortRequestLock) {
-                for (int i = m_shortRequestPending.Count - 1; i >= 0; i--) {
-                    if (m_shortRequestPending[i].channel == ch)
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void EnqueueMainThreadAction(Action action) {
-            if (action == null) return;
-            lock (m_mainThreadActionsLock) {
-                m_mainThreadActions.Enqueue(action);
-            }
-        }
-
-        private void FlushMainThreadActions() {
-            while (true) {
-                Action action = null;
-                lock (m_mainThreadActionsLock) {
-                    if (m_mainThreadActions.Count > 0)
-                        action = m_mainThreadActions.Dequeue();
-                }
-
-                if (action == null)
-                    break;
-
-                try {
-                    action.Invoke();
-                } catch (Exception ex) {
-                    Debug.LogWarning("[NetworkManager] Main-thread action failed: " + ex.Message);
                 }
             }
         }
@@ -472,7 +327,8 @@ namespace Network {
             try {
                 foreach (var ch in m_pumpScratch)
                     ch.DispatchPendingMessages();
-            } finally {
+            }
+            finally {
                 m_pumpScratch.Clear();
             }
         }
