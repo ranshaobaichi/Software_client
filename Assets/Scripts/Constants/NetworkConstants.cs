@@ -43,7 +43,6 @@ namespace Constants {
     public enum LoginRequestType {
         LOGIN = 0,
         REGISTER = 1,
-        LOGOUT = 2,
     }
     #endregion
     
@@ -56,8 +55,6 @@ namespace Constants {
         SEND_MESSAGE = 4,
         HEARTBEAT = 5,
         EDIT_PROFILE = 6,
-        SET_READY = 7,
-        BROADCAST = 8
     }
     #endregion
 }

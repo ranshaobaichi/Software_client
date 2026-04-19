@@ -14,25 +14,5 @@ namespace UI.Dialog {
 
         public static implicit operator DialogResult(string value) =>
             new DialogResult { strVal = value };
-        
-        public static DialogResult FromObject(object value) {
-            if (value == null) {
-                return Empty;
-            }
-
-            if (value is bool b) {
-                return b;
-            }
-
-            if (value is int i) {
-                return i;
-            }
-
-            if (value is string s) {
-                return s;
-            }
-
-            return new DialogResult { objVal = value };
-        }
     }
 }

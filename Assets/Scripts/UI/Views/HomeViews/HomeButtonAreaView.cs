@@ -1,6 +1,4 @@
-﻿using Constants;
-using Network;
-using Network.Messages;
+﻿using UnityEngine;
 using UI.StateEngine;
 using UI.States;
 using UI.ViewModels;
@@ -16,13 +14,6 @@ namespace UI.Views {
 
         #region Button Callbacks
         public void OnQuitGameClicked() {
-            NetworkManager.SInstance.SendShortRequest(NetworkConstants.LoginPort,
-                    new LogoutRequest {
-                            type = (int)LoginRequestType.LOGOUT,
-                            uid = PlayerData.SInstance.basicInfo.uid
-                    },
-                    blockOnConnect: true);
-
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -30,7 +21,9 @@ namespace UI.Views {
 #endif
         }
 
-        public void OnSwitchOnlineLobbyClicked() { m_stateFinder.Current(this).AddTop<OnlineLobbyState>(); }
+        public void OnSwitchOnlineLobbyClicked() {
+            m_stateFinder.Current(this).AddTop<OnlineLobbyState>();
+        }
         #endregion
     }
 }
