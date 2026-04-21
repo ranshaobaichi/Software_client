@@ -1554,8 +1554,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _avatarImage: {fileID: 7427070037124561871}
-  _uid: {fileID: 0}
-  _id: {fileID: 0}
+  _uid: {fileID: 551295610286368980}
+  _id: {fileID: 237321672740671767}
 --- !u!1 &7572691085388651044
 GameObject:
   m_ObjectHideFlags: 0

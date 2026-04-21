@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Constants {
     public static class NetworkConstants {
-        public const string DefaultHost = "10.22.120.182";
+        public const string DefaultHost = "127.0.0.1";
         public const int LoginPort = 8765;
         public const int HomePort = 8766;
     }

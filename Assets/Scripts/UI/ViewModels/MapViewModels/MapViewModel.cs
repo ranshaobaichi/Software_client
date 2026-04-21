@@ -43,7 +43,8 @@ namespace UI.ViewModels {
         private void OnFail(ServerNetworkFailMessage msg) { }
         private void OnError(NetworkErrorMessage msg) { }
 
-        private void BuildLayers() {
+        private void BuildLayers()
+        {
             m_layers = new Dictionary<int, List<ServerMapNode>>();
 
             if (m_map == null || m_map.Length == 0)
@@ -55,45 +56,135 @@ namespace UI.ViewModels {
             foreach (var n in m_map)
                 indegree[n.nodeId] = 0;
 
-            foreach (var n in m_map) {
+            foreach (var n in m_map)
+            {
                 if (n.nextIds == null) continue;
 
-                foreach (var next in n.nextIds) {
+                foreach (var next in n.nextIds)
+                {
                     if (indegree.ContainsKey(next))
                         indegree[next]++;
                 }
             }
 
-
             var queue = new Queue<string>();
-            foreach (var kv in indegree) {
+
+            foreach (var kv in indegree)
+            {
                 if (kv.Value == 0)
                     queue.Enqueue(kv.Key);
             }
 
-            var visited = new HashSet<string>();
             int layer = 0;
 
-            while (queue.Count > 0) {
+            while (queue.Count > 0)
+            {
                 int size = queue.Count;
                 var list = new List<ServerMapNode>();
 
-                var id = queue.Dequeue();
+                for (int i = 0; i < size; i++)
+                {
+                    var id = queue.Dequeue();
+                    var node = nodeDict[id];
 
-                var node = nodeDict[id];
-                list.Add(node);
+                    list.Add(node);
 
-                if (node.nextIds == null) continue;
+                    if (node.nextIds == null) continue;
 
-                foreach (var next in node.nextIds) {
-                    if (visited.Add(next)) {
-                        queue.Enqueue(next);
+                    foreach (var next in node.nextIds)
+                    {
+                        indegree[next]--;
+                        if (indegree[next] == 0)
+                            queue.Enqueue(next);
                     }
                 }
 
                 m_layers[layer] = list;
                 layer++;
             }
+        }
+        public void TestLocalMap()
+        {
+            m_map = CreateTestMap();
+
+            BuildLayers();
+
+            RaisePropertyChanged(nameof(Layers));
+        }
+        private ServerMapNode[] CreateTestMap()
+        {
+            return new ServerMapNode[]
+            {
+                    new ServerMapNode
+                    {
+                            nodeId = "0",
+                            type = NodeType.NORMAL,
+                            nextIds = new string[] { "1", "2", "3" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "1",
+                            type = NodeType.NORMAL,
+                            nextIds = new string[] { "4", "5" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "2",
+                            type = NodeType.ELITE,
+                            nextIds = new string[] { "5" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "3",
+                            type = NodeType.EVENT,
+                            nextIds = new string[] { "6" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "4",
+                            type = NodeType.NORMAL,
+                            nextIds = new string[] { "7" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "5",
+                            type = NodeType.ELITE,
+                            nextIds = new string[] { "7", "8" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "6",
+                            type = NodeType.EVENT,
+                            nextIds = new string[] { "8" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "7",
+                            type = NodeType.NORMAL,
+                            nextIds = new string[] { "9" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "8",
+                            type = NodeType.ELITE,
+                            nextIds = new string[] { "9" }
+                    },
+
+                    new ServerMapNode
+                    {
+                            nodeId = "9",
+                            type = NodeType.BOSS,
+                            nextIds = new string[] { }
+                    }
+            };
         }
     }
 }

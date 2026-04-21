@@ -19,7 +19,8 @@ namespace UI.States {
             _mapView.SetViewModel(m_viewModel);
 
 
-            m_viewModel.RequestMap(0);
+           // m_viewModel.RequestMap(0);
+            m_viewModel.TestLocalMap();
         }
 
         public void OnQuitButtonClicked() {
