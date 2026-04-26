@@ -178,6 +178,58 @@ namespace Network.Messages {
 
     [Serializable]
     public class LeaveRoomResponse : ServerNetworkMessages { }
+    #endregion
+    
+    #region Battle Service
+
+    #region Client Messages
+    [Serializable]
+    public class PlayerReadyRequest : ClientNetworkMessage {
+        public string uid;
+    }
+
+    [Serializable]
+    public class EnemyPositionEntry {
+        public int entityId;
+        public BattleVector2 position;
+    }
+
+    [Serializable]
+    public class PositionSyncRequest : ClientNetworkMessage {
+        public string uid;
+        public BattleVector2 playerPosition;
+        public EnemyPositionEntry[] enemyPositions;
+    }
+
+    [Serializable]
+    public class PlayerShootRequest : ClientNetworkMessage {
+        public string uid;
+        public BattleVector2 direction;
+        public BattleVector2 playerPosition;
+        public EnemyPositionEntry[] enemyPositions;
+    }
+    #endregion
+    
+    #region Server Messages
+    [Serializable]
+    public class BattleWaitResponse : ServerNetworkMessages {
+        public int gameFrame;
+        public int readyCount;
+        public int totalCount;
+    }
+
+    [Serializable]
+    public class BattleFrameResponse : ServerNetworkMessages {
+        public int serverTick;
+
+        public List<BattlePlayerEntity> playerEntities;
+        public List<BattleEnemyEntity> enemyEntities;
+        public List<BattleBulletEntity> bulletEntities;
+
+        public List<BattleEventDTO> events;
+    }
+    #endregion
+
 
     #endregion
 

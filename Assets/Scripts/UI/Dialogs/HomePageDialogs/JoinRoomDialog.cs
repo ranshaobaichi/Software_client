@@ -13,7 +13,7 @@ namespace UI.Dialogs.HomePageDialogs {
         [SerializeField]
         private Text _roomHeadCountText;
         [SerializeField]
-        private Text _roomIdText;
+        private InputField _roomIdText;
         [SerializeField]
         private List<Image> _playerAvatarImages;
 

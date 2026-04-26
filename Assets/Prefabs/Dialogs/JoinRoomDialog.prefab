@@ -1455,7 +1455,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _blurTarget: {fileID: 2788583719058334664}
   _roomHeadCountText: {fileID: 3793504782651117159}
-  _roomIdText: {fileID: 5076724791739650234}
+  _roomIdText: {fileID: 3193830486841808367}
   _playerAvatarImages:
   - {fileID: 2710291531556832470}
   - {fileID: 3850016838361954453}

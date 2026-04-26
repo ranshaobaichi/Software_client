@@ -3,10 +3,11 @@ using System;
 namespace Constants {
     public static class NetworkConstants {
         public const string DefaultHost = "127.0.0.1";
-        public const int LoginPort = 8765;
-        public const int HomePort = 8766;
-        public const int ShopPort = 8767;
-        public const int MapPort = 8768;
+        public const int LoginPort = 22222;
+        public const int HomePort = 22223;
+        public const int ShopPort = 22224;
+        public const int MapPort = 22225;
+        public const int BattlePort = 22226;
     }
 
     [Flags]
@@ -81,5 +82,29 @@ namespace Constants {
         SHOP_SYNC = 0,
     };
 
+    #endregion
+
+    #region Room Service
+    public enum RoomPushMessage {
+        ALL_PLAYERS_READY = 0,
+    }
+    #endregion
+    
+    #region Battle Service
+    public enum BattleRequestType {
+        PLAYER_READY = 0,
+        POSITION_SYNC = 1,
+        PLAYER_SHOOT = 2,
+    }
+
+    public enum BattleResponseType {
+        BATTLE_WAIT = 0,
+        BATTLE_FRAME = 1,
+    }
+
+    public enum BattlePushMessageType {
+        BATTLE_START = 0,
+        BATTLE_END = 1,
+    }
     #endregion
 }
