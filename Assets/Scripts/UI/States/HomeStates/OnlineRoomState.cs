@@ -24,6 +24,14 @@ namespace UI.States {
             pageFinder.Current(this).SwitchTo<BattlePage>();
         }
         
+        private void OnApplicationQuit() {
+            var request = new LeaveRoomRequest {
+                    type = (int)HomeRequestType.LEAVE_ROOM,
+                    uid = PlayerData.SInstance.basicInfo.uid
+            };
+            m_channel.Send(request);
+        }
+
         #region State Overrides and Message Handling
         public override void ReceiveMessage(Dictionary<Type, object> messages) {
             if (messages == null) {

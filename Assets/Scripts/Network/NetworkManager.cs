@@ -75,6 +75,15 @@ namespace Network {
             PumpAll();
             PruneShortRequestTimeouts();
         }
+
+        private void OnApplicationQuit() {
+            NetworkManager.SInstance.SendShortRequest(NetworkConstants.LoginPort,
+            new LogoutRequest {
+                    type = (int)LoginRequestType.LOGOUT,
+                    uid = PlayerData.SInstance.basicInfo.uid
+            },
+            blockOnConnect: true);
+        }
         #endregion
 
         #region Static Methods
