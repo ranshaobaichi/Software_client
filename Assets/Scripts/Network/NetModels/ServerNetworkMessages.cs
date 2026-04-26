@@ -4,12 +4,15 @@ using Constants;
 
 namespace Network.Messages {
     #region Client Message Types
+
     public abstract class ClientNetworkMessage {
         public int type;
     }
+
     #endregion
 
     #region Server Message Types
+
     public abstract class ServerNetworkMessages { }
 
     [Serializable]
@@ -22,7 +25,7 @@ namespace Network.Messages {
         public ServerCode code;
         public string message;
     }
-    
+
     /// <summary>
     /// Wire-format envelope for all short connection server responses.
     /// Use <see cref="ShortEnvelope{T}"/> to deserialize data directly.
@@ -54,9 +57,11 @@ namespace Network.Messages {
         public int type;
         public List<int> pushMessages;
     }
+
     #endregion
 
     #region Structures
+
     [Serializable]
     public class RoomInfo {
         public int roomId;
@@ -64,10 +69,32 @@ namespace Network.Messages {
         public List<PlayerData.PlayerBasicInfo> basicInfos;
         public List<string> readyUids;
     }
+
+    public enum status {
+        undo = 0,
+        select = 1,
+        buy = 2
+    }
+
+    [Serializable]
+    public class ShopItem {
+        public string itemId;
+        public status itemStatus;
+        public string selectUid;
+    }
+
+    [Serializable]
+    public class playerInfos {
+        public PlayerData.PlayerBasicInfo playerInfo;
+        public List<string> ownedItems;
+    }
+
     #endregion
 
     #region Short Connection Service
+
     #region Login Service
+
     [Serializable]
     public class LoginRequest : ClientNetworkMessage {
         public string uid;
@@ -90,9 +117,11 @@ namespace Network.Messages {
     public class LogoutRequest : ClientNetworkMessage {
         public string uid;
     }
+
     #endregion
 
     #region Home Service
+
     [Serializable]
     public class CreateRoomRequest : ClientNetworkMessage {
         public string uid;
@@ -122,11 +151,15 @@ namespace Network.Messages {
     public class RefreshRoomResponse : ServerNetworkSuccessMessage {
         public List<RoomInfo> roomInfos;
     }
+
     #endregion
+
     #endregion
 
     #region Long Connection Service
+
     #region Room Service
+
     [Serializable]
     public class SetReadyStatusRequest : ClientNetworkMessage {
         public string uid;
@@ -137,17 +170,49 @@ namespace Network.Messages {
     public class BroadcastRoomStatusResponse : ServerNetworkMessages {
         public RoomInfo roomInfo;
     }
-    
+
     [Serializable]
     public class LeaveRoomRequest : ClientNetworkMessage {
         public string uid;
     }
+
     [Serializable]
     public class LeaveRoomResponse : ServerNetworkMessages { }
+
     #endregion
+
+    #region Shop Service
+
+    [Serializable]
+    public class ShopInitRequest : ClientNetworkMessage {
+        public string uid;
+    }
+
+    [Serializable]
+    public class ShopMoveCursorRequest : ClientNetworkMessage {
+        public string uid;
+        public string itemId;
+    }
+
+
+    [Serializable]
+    public class ShopBuyRequest : ClientNetworkMessage {
+        public string uid;
+        public string itemId;
+    }
+
+    [Serializable]
+    public class ShopSyncResponse {
+        public List<ShopItem> items;
+        public List<playerInfos> playerInfos;
+    }
+
+    #endregion
+
     #endregion
 
     #region Sample Message Types
+
     [Serializable]
     public class NetPlayer {
         public string id;
@@ -180,5 +245,6 @@ namespace Network.Messages {
         public string id;
         public NetPlayer[] players;
     }
+
     #endregion
 }

@@ -85,6 +85,7 @@ Assets/TODO.md
 ########################
 
 .workspace/
+.cursor/plans/
 
 ########################
 # Specific to this project
