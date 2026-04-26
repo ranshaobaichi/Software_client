@@ -21,6 +21,12 @@ namespace Network {
     /// Specific TCP channel implementation, using the long connection pattern
     /// </summary>
     public class TcpConnectionChannel : INetworkChannel {
+        private sealed class OutgoingWorkItem {
+            public Func<IMessageSerializer, byte[]> BuildBytes;
+            public string SerializedJson;
+            public string TypeName;
+        }
+
         public bool IsConnected => Interlocked.CompareExchange(ref m_connected, 0, 0) == 1 && m_client?.Connected == true;
 
         private readonly string m_host;
@@ -31,12 +37,15 @@ namespace Network {
         private TcpClient m_client;
         private Stream m_stream;
         private Thread m_receiveThread;
+        private Thread m_sendThread;
 
         private volatile bool m_running;
 
         // 1 = connected, 0 = not connected; use Interlocked to read-and-clear atomically
         private int m_connected;
         private readonly object m_sendLock = new object();
+        private readonly ConcurrentQueue<OutgoingWorkItem> m_outgoing = new ConcurrentQueue<OutgoingWorkItem>();
+        private readonly AutoResetEvent m_sendSignal = new AutoResetEvent(false);
 
         private readonly ConcurrentQueue<byte[]> m_incoming = new ConcurrentQueue<byte[]>();
         private Type m_handlerType;
@@ -67,6 +76,8 @@ namespace Network {
                 m_stream = m_client.GetStream();
                 m_connected = 1;
                 m_running = true;
+                m_sendThread = new Thread(SendLoop) { IsBackground = true };
+                m_sendThread.Start();
                 m_receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
                 m_receiveThread.Start();
             }
@@ -85,6 +96,7 @@ namespace Network {
         public void Disconnect() {
             _ = Interlocked.Exchange(ref m_connected, 0) == 1;
             m_running = false;
+            m_sendSignal.Set();
             try {
                 m_client?.Close();
             }
@@ -94,6 +106,13 @@ namespace Network {
 
             try {
                 m_stream?.Close();
+            }
+            catch {
+                // ignored
+            }
+
+            try {
+                m_sendThread?.Join(500);
             }
             catch {
                 // ignored
@@ -117,16 +136,21 @@ namespace Network {
         /// <param name="payload"></param>
         /// <typeparam name="T"></typeparam>
         public void Send<T>(T payload) where T : class {
-            lock (m_sendLock) {
-                if (m_stream == null || m_serializer == null) return;
-                try {
-                    byte[] raw = m_serializer.Serialize(payload);
-                    if (raw != null)
-                        m_framer.WriteMessage(m_stream, raw);
-                }
-                catch (Exception ex) {
-                    Debug.LogWarning("[TcpConnectionChannel] Send failed: " + ex.Message);
-                }
+            if (!IsConnected || m_serializer == null || payload == null) {
+                return;
+            }
+
+            try {
+                string serializedJson = JsonUtility.ToJson(payload);
+                m_outgoing.Enqueue(new OutgoingWorkItem {
+                        BuildBytes = serializer => serializer.Serialize(payload),
+                        SerializedJson = serializedJson,
+                        TypeName = typeof(T).Name
+                });
+                m_sendSignal.Set();
+            }
+            catch (Exception ex) {
+                Debug.LogWarning("[TcpConnectionChannel] Enqueue send failed: " + ex.Message);
             }
         }
 
@@ -159,8 +183,9 @@ namespace Network {
 
         public void DispatchPendingMessages() {
             if (m_longDispatch != null) {
-                while (m_incoming.TryDequeue(out byte[] longData))
+                while (m_incoming.TryDequeue(out byte[] longData)) {
                     DispatchOneLongFrame(longData);
+                }
 
                 return;
             }
@@ -199,7 +224,8 @@ namespace Network {
         /// 3) Dispatch each push marker via <see cref="LongConnectionDispatchTables.PushByMarker"/>.
         /// </summary>
         private void DispatchOneLongFrame(byte[] raw) {
-            LongConnectionInboundDispatcher.Dispatch(raw, m_serializer, m_longDispatch);
+            NetworkPacketLog.LogRecvWire(m_port, raw);
+            LongConnectionInboundDispatcher.Dispatch(raw, m_serializer, m_longDispatch, m_port);
         }
 
         private void ReceiveLoop() {
@@ -221,6 +247,46 @@ namespace Network {
             finally {
                 _ = Interlocked.Exchange(ref m_connected, 0) == 1;
                 m_running = false;
+                m_sendSignal.Set();
+            }
+        }
+
+        private void SendLoop() {
+            try {
+                while (m_running) {
+                    if (!m_outgoing.TryDequeue(out var workItem)) {
+                        m_sendSignal.WaitOne(20);
+                        continue;
+                    }
+
+                    if (workItem?.BuildBytes == null) {
+                        continue;
+                    }
+
+                    byte[] data = workItem.BuildBytes(m_serializer);
+                    if (data == null || data.Length == 0) {
+                        continue;
+                    }
+
+                    NetworkPacketLog.LogSendWire(m_port, data);
+                    NetworkPacketLog.LogSendSerialized(m_port, workItem.TypeName, workItem.SerializedJson);
+
+                    lock (m_sendLock) {
+                        if (!m_running || m_stream == null) {
+                            continue;
+                        }
+
+                        m_framer.WriteMessage(m_stream, data);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                if (m_running) {
+                    Debug.LogWarning("[TcpConnectionChannel] Send loop error: " + ex.Message);
+                }
+            }
+            finally {
+                while (m_outgoing.TryDequeue(out _)) { }
             }
         }
     }

@@ -81,15 +81,13 @@ namespace Network {
             PruneShortRequestTimeouts();
         }
 
-        private void OnApplicationQuit() {
-            NetworkManager.SInstance.SendShortRequest(NetworkConstants.LoginPort,
-                    new LogoutRequest {
-                            type = (int)LoginRequestType.LOGOUT,
-                            uid = PlayerData.SInstance.basicInfo.uid
-                    },
-                    blockOnConnect: true);
-        }
-
+        // private void OnApplicationQuit() {
+        //     SendShortRequest(NetworkConstants.LoginPort,
+        //             new LogoutRequest {
+        //                     type = (int)LoginRequestType.LOGOUT,
+        //                     uid = PlayerData.SInstance.basicInfo.uid
+        //             });
+        // }
         #endregion
 
         #region Static Methods
@@ -170,11 +168,14 @@ namespace Network {
                 IMessageSerializer serializer = null
         )
                 where TMainOpcode : struct {
-            if (!typeof(TMainOpcode).IsEnum)
+            if (!typeof(TMainOpcode).IsEnum) {
                 throw new ArgumentException("TMainOpcode must be an enum", nameof(TMainOpcode));
+            }
+
             var mainInt = new Dictionary<int, LongConnectionMainDispatchEntry>(mainHandlers.Count);
-            foreach (var kv in mainHandlers)
+            foreach (var kv in mainHandlers) {
                 mainInt[Convert.ToInt32(kv.Key)] = kv.Value;
+            }
 
             return CreateLongConnection(host, port, mainInt, pushHandlers, dispatchPushWhenMainTypeUnknown, framer,
                     serializer);
@@ -192,8 +193,14 @@ namespace Network {
                 IMessageFramer framer = null,
                 IMessageSerializer serializer = null
         ) {
-            if (mainHandlers == null) throw new ArgumentNullException(nameof(mainHandlers));
-            if (pushHandlers == null) throw new ArgumentNullException(nameof(pushHandlers));
+            if (mainHandlers == null) {
+                throw new ArgumentNullException(nameof(mainHandlers));
+            }
+
+            if (pushHandlers == null) {
+                throw new ArgumentNullException(nameof(pushHandlers));
+            }
+
             var tables = new LongConnectionDispatchTables(mainHandlers, pushHandlers, dispatchPushWhenMainTypeUnknown);
             var framerToUse = framer ?? m_defaultFramer ?? new LineFramer();
             var serializerToUse = serializer ?? m_defaultSerializer ?? new JsonMessageSerializer();

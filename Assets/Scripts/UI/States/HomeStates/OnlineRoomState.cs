@@ -29,14 +29,14 @@ namespace UI.States {
             var pageFinder = new UIPageFinder();
             pageFinder.Current(this).SwitchTo<BattlePage>();
         }
-
-        private void OnApplicationQuit() {
-            var request = new LeaveRoomRequest {
-                    type = (int)HomeRequestType.LEAVE_ROOM,
-                    uid = PlayerData.SInstance.basicInfo.uid
-            };
-            m_channel.Send(request);
-        }
+        
+        // private void OnApplicationQuit() {
+        //     var request = new LeaveRoomRequest {
+        //             type = (int)HomeRequestType.LEAVE_ROOM,
+        //             uid = PlayerData.SInstance.basicInfo.uid
+        //     };
+        //     m_channel.Send(request);
+        // }
 
         #region State Overrides and Message Handling
 
@@ -63,7 +63,13 @@ namespace UI.States {
                             }
                     };
 
-            var pushHandler = new Dictionary<int, Action>();
+            var pushHandler = new Dictionary<int, Action>() {
+                    {
+                            (int)RoomPushMessage.ALL_PLAYERS_READY,
+                            TEST_SwitchToBattlePage
+                    }
+            };
+            
             m_channel = NetworkManager.SInstance.CreateLongConnection(
                     NetworkConstants.DefaultHost,
                     NetworkConstants.HomePort,
