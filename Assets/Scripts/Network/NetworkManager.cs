@@ -11,6 +11,7 @@ namespace Network {
     /// </summary>
     public class NetworkManager : MonoBehaviour {
         #region Singleton
+
         private static volatile NetworkManager s_instance;
         private static readonly object InstanceLock = new object();
 
@@ -32,9 +33,11 @@ namespace Network {
                 return s_instance;
             }
         }
+
         #endregion
 
         #region Fields
+
         private IMessageFramer m_defaultFramer;
         private IMessageSerializer m_defaultSerializer;
 
@@ -48,9 +51,11 @@ namespace Network {
         private readonly object m_shortRequestLock = new object();
         private readonly Queue<Action> m_mainThreadActions = new Queue<Action>();
         private readonly object m_mainThreadActionsLock = new object();
+
         #endregion
 
         #region Unity Lifecycle
+
         private void Awake() {
             if (s_instance != null && s_instance != this) {
                 Destroy(gameObject);
@@ -66,7 +71,7 @@ namespace Network {
         private void OnDestroy() {
             if (s_instance == this)
                 s_instance = null;
-            
+
             DisconnectAll();
         }
 
@@ -78,15 +83,17 @@ namespace Network {
 
         private void OnApplicationQuit() {
             NetworkManager.SInstance.SendShortRequest(NetworkConstants.LoginPort,
-            new LogoutRequest {
-                    type = (int)LoginRequestType.LOGOUT,
-                    uid = PlayerData.SInstance.basicInfo.uid
-            },
-            blockOnConnect: true);
+                    new LogoutRequest {
+                            type = (int)LoginRequestType.LOGOUT,
+                            uid = PlayerData.SInstance.basicInfo.uid
+                    },
+                    blockOnConnect: true);
         }
+
         #endregion
 
         #region Static Methods
+
         private static void DefaultOnServiceSuccessAction(ServerNetworkSuccessMessage successMsg) {
             // Debug.Log(successMsg);
         }
@@ -95,7 +102,9 @@ namespace Network {
             // Debug.LogWarning("[NetworkManager] Service Failure: " + (failMsg != null ? failMsg.ToString() : "null"));
         }
 
-        private static void DefaultOnTimeoutAction() { Debug.LogError("[NetworkManager] Timeout"); }
+        private static void DefaultOnTimeoutAction() {
+            Debug.LogError("[NetworkManager] Timeout");
+        }
 
         private static void DefaultOnErrorAction(NetworkErrorMessage errorMsg) {
             Debug.LogError($"[NetworkManager] Error: {errorMsg.code} - {errorMsg.message}");
@@ -122,6 +131,7 @@ namespace Network {
                         $"Payload type mismatch. Expected {typeof(TData).FullName}, got {payload.GetType().FullName}.");
             });
         }
+
         #endregion
 
         /// <summary>
@@ -209,6 +219,7 @@ namespace Network {
         }
 
         #region Short Connection Utilities
+
         public void SendShortRequest<TRequest>(
                 int port,
                 TRequest request,
@@ -402,6 +413,7 @@ namespace Network {
                 });
             });
         }
+
         #endregion
 
         private void RemoveShortRequestPending(INetworkChannel ch) {

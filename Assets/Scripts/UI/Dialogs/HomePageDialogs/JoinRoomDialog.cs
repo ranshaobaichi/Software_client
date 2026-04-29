@@ -6,7 +6,6 @@ using Network;
 using Network.Messages;
 using UI.Dialog;
 using UI.Models;
-using UnityEngine.WSA;
 using Utils;
 
 namespace UI.Dialogs.HomePageDialogs {
