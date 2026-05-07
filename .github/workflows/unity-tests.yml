@@ -1,0 +1,42 @@
+# 当代码区（Assets/Scripts）或测试区（Assets/Tests）有变更时，在 push / PR 上运行 Assets/Tests 下全部测试（Edit Mode + Play Mode）。
+name: Unity Tests
+
+on:
+  push:
+    paths:
+      - "Assets/Scripts/**"
+      - "Assets/Tests/**"
+  pull_request:
+    paths:
+      - "Assets/Scripts/**"
+      - "Assets/Tests/**"
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  test:
+    name: Run Unity Test Framework
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests (Edit + Play)
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2022.3.28f1
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-test-results
+          path: artifacts
