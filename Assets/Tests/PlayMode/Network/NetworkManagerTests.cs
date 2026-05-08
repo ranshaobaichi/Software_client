@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using NUnit.Framework;
 using UnityEngine.TestTools;
@@ -44,7 +45,7 @@ namespace Tests.PlayMode.Network {
 
             bool errorCalled = false;
 
-            NetworkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
                 server.Port,
                 request,
                 response => {
@@ -106,7 +107,7 @@ namespace Tests.PlayMode.Network {
 
             bool successOrErrorCalled = false;
 
-            NetworkManager.SendShortRequestWithFailure<LoginRequest, TestShortFailureResponse>(
+            m_networkManager.SendShortRequestWithFailure<LoginRequest, TestShortFailureResponse>(
                 server.Port,
                 request,
                 onFailure: failure => {
@@ -153,7 +154,7 @@ namespace Tests.PlayMode.Network {
             // DefaultOnTimeoutAction logs: "[NetworkManager] Timeout"
             LogAssert.Expect(LogType.Error, "[NetworkManager] Timeout");
 
-            NetworkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
                 server.Port,
                 request,
                 _ => { successCalled = true; },
@@ -187,7 +188,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(payload => {
+                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(payload => {
                         mainCalled = true;
                         mainPayload = payload;
                     })
@@ -198,7 +199,7 @@ namespace Tests.PlayMode.Network {
                 { pushMarker, () => { pushCalled = true; } }
             };
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 mainHandlers,
@@ -239,7 +240,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                 }
             };
 
@@ -247,7 +248,7 @@ namespace Tests.PlayMode.Network {
                 { pushMarker, () => { pushCalled = true; } }
             };
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 mainHandlers,
@@ -287,7 +288,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                 }
             };
 
@@ -295,7 +296,7 @@ namespace Tests.PlayMode.Network {
                 { pushMarker, () => { pushCalled = true; } }
             };
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 mainHandlers,
@@ -315,7 +316,7 @@ namespace Tests.PlayMode.Network {
                 pushMessages = new List<int> { pushMarker }
             });
 
-            // Give NetworkManager.Update() a few frames; push should not fire.
+            // Give m_networkManager.Update() a few frames; push should not fire.
             yield return null;
             yield return null;
             yield return null;
@@ -335,7 +336,7 @@ namespace Tests.PlayMode.Network {
             bool successCalled = false;
             RegisterResponse successPayload = null;
 
-            NetworkManager.SendShortRequestWithSuccess<RegisterRequest, RegisterResponse>(
+            m_networkManager.SendShortRequestWithSuccess<RegisterRequest, RegisterResponse>(
                 server.Port,
                 request,
                 response => {
@@ -373,7 +374,7 @@ namespace Tests.PlayMode.Network {
             bool successCalled = false;
             CreateRoomResponse responsePayload = null;
 
-            NetworkManager.SendShortRequestWithSuccess<CreateRoomRequest, CreateRoomResponse>(
+            m_networkManager.SendShortRequestWithSuccess<CreateRoomRequest, CreateRoomResponse>(
                 server.Port,
                 request,
                 response => {
@@ -418,7 +419,7 @@ namespace Tests.PlayMode.Network {
             bool successCalled = false;
             JoinRoomResponse responsePayload = null;
 
-            NetworkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
+            m_networkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
                 server.Port,
                 request,
                 onSuccess: response => {
@@ -460,7 +461,7 @@ namespace Tests.PlayMode.Network {
             bool successCalled = false;
             RefreshRoomResponse responsePayload = null;
 
-            NetworkManager.SendShortRequestWithSuccess<RefreshRoomRequest, RefreshRoomResponse>(
+            m_networkManager.SendShortRequestWithSuccess<RefreshRoomRequest, RefreshRoomResponse>(
                 server.Port,
                 request,
                 response => {
@@ -506,7 +507,7 @@ namespace Tests.PlayMode.Network {
             bool failureCalled = false;
             bool errorCalled = false;
 
-            NetworkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
+            m_networkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
                 server.Port,
                 request,
                 onSuccess: _ => { },
@@ -538,7 +539,7 @@ namespace Tests.PlayMode.Network {
             bool errorCalled = false;
             NetworkErrorMessage receivedError = null;
 
-            NetworkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
+            m_networkManager.SendShortRequest<JoinRoomRequest, JoinRoomResponse, ServerNetworkFailMessage>(
                 server.Port,
                 request,
                 onSuccess: _ => { successCalled = true; },
@@ -581,7 +582,7 @@ namespace Tests.PlayMode.Network {
             bool errorCalled = false;
             NetworkErrorMessage receivedError = null;
 
-            NetworkManager.SendShortRequest<RefreshRoomRequest, RefreshRoomResponse, ServerNetworkFailMessage>(
+            m_networkManager.SendShortRequest<RefreshRoomRequest, RefreshRoomResponse, ServerNetworkFailMessage>(
                 server.Port,
                 request,
                 onSuccess: _ => { successCalled = true; },
@@ -622,7 +623,7 @@ namespace Tests.PlayMode.Network {
             bool errorCalled = false;
             NetworkErrorMessage receivedError = null;
 
-            NetworkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
                 server.Port,
                 request,
                 _ => { },
@@ -635,9 +636,9 @@ namespace Tests.PlayMode.Network {
 
             yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Login request not received.");
 
-            // Unknown code + null message should use NetworkManager fallback "Unknown error".
+            const int codeNeitherSuccessNorFail = 999996;
             server.SendObject(new ShortEnvelope<ServerNetworkSuccessMessage> {
-                code = 999999,
+                code = codeNeitherSuccessNorFail,
                 data = new ServerNetworkSuccessMessage(),
                 message = null
             });
@@ -645,7 +646,7 @@ namespace Tests.PlayMode.Network {
             yield return WaitUntil(() => errorCalled, 2f, "onError callback not called for unknown code.");
 
             Assert.NotNull(receivedError);
-            Assert.AreEqual((ServerCode)999999, receivedError.code);
+            Assert.AreEqual((ServerCode)codeNeitherSuccessNorFail, receivedError.code);
             Assert.AreEqual("Unknown error", receivedError.message);
         }
 
@@ -659,14 +660,14 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.BROADCAST,
-                    NetworkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(payload => {
+                    m_networkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(payload => {
                         broadcastCalled = true;
                         received = payload;
                     })
                 }
             };
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 mainHandlers,
@@ -695,13 +696,13 @@ namespace Tests.PlayMode.Network {
         public IEnumerator CreateLongConnection_SendSetReadyStatusRequest_SendsExpectedPayload() {
             FakeServer server = StartFakeServer();
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
+                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
                     }
                 },
                 new Dictionary<int, Action>(),
@@ -732,13 +733,13 @@ namespace Tests.PlayMode.Network {
         public IEnumerator CreateLongConnection_SendLeaveRoomRequest_SendsExpectedPayload() {
             FakeServer server = StartFakeServer();
 
-            var ch = NetworkManager.CreateLongConnection(
+            var ch = m_networkManager.CreateLongConnection(
                 NetworkConstants.DefaultHost,
                 server.Port,
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
+                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
                     }
                 },
                 new Dictionary<int, Action>(),
@@ -762,5 +763,330 @@ namespace Tests.PlayMode.Network {
             Assert.AreEqual((int)HomeRequestType.LEAVE_ROOM, decoded.type);
             Assert.AreEqual("leave-user", decoded.uid);
         }
+
+        #region Protocol boundary cases
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenResponseFrameEmpty_DispatchesDeserializeError() {
+            FakeServer server = StartFakeServer();
+
+            bool successCalled = false;
+            bool errorCalled = false;
+            NetworkErrorMessage receivedError = null;
+
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                server.Port,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "edge-empty" },
+                _ => { successCalled = true; },
+                onError: err => {
+                    errorCalled = true;
+                    receivedError = err;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Request not received.");
+
+            server.SendFramedPayload(Array.Empty<byte>());
+
+            yield return WaitUntil(() => errorCalled, 2f, "onError not called for empty framed response.");
+
+            Assert.False(successCalled);
+            Assert.NotNull(receivedError);
+            Assert.AreEqual(ServerCode.DESERIALIZE_ERROR, receivedError.code);
+            Assert.AreEqual("Failed to deserialize server envelope", receivedError.message);
+        }
+
+        /// <summary>
+        /// Documents current wiring: garbage UTF-8 makes <see cref="JsonMessageSerializer.Deserialize"/> throw while probing
+        /// <see cref="ShortEnvelope{ServerNetworkSuccessMessage}"/>; the exception escapes the short-request handler into
+        /// <see cref="TcpConnectionChannel.DispatchPendingMessages"/>, which catches it and logs a Warning only—
+        /// <c>onError</c> is not invoked (unlike the <c>envelopeProbe == null</c> branch).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenResponseNotJson_ChannelLogsWarning_OnErrorNotInvoked() {
+            FakeServer server = StartFakeServer();
+
+            bool errorCalled = false;
+            NetworkErrorMessage receivedError = null;
+
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                server.Port,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "edge-badjson" },
+                _ => { },
+                onError: err => {
+                    errorCalled = true;
+                    receivedError = err;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Request not received.");
+
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[TcpConnectionChannel\] Deserialize/Dispatch failed:"));
+            server.SendFramedUtf8("not-json-at-all");
+
+            yield return null;
+            yield return null;
+
+            Assert.False(errorCalled, "Probe deserialize throws; channel swallows callback exception so onError is skipped.");
+            Assert.Null(receivedError);
+        }
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenSuccessPayloadNestedShapeInvalid_JsonUtilityMayStillInvokeOnSuccess() {
+            FakeServer server = StartFakeServer();
+
+            bool successCalled = false;
+            bool errorCalled = false;
+            NetworkErrorMessage receivedError = null;
+            LoginResponse receivedPayload = null;
+
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                server.Port,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "edge-baddata" },
+                r => {
+                    successCalled = true;
+                    receivedPayload = r;
+                },
+                onError: err => {
+                    errorCalled = true;
+                    receivedError = err;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Request not received.");
+
+            server.SendFramedUtf8("{\"code\":1,\"data\":{\"playerData\":{\"basicInfo\":1}},\"message\":\"\"}");
+
+            yield return WaitUntil(() => successCalled, 2f, "onSuccess not called after malformed nested success payload.");
+
+            Assert.False(errorCalled);
+            Assert.Null(receivedError);
+            Assert.NotNull(receivedPayload);
+        }
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenCodeCombinesSuccessAndFailBits_DispatchesSuccessPath() {
+            FakeServer server = StartFakeServer();
+
+            bool successCalled = false;
+            LoginResponse received = null;
+
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                server.Port,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "edge-bitmask" },
+                r => {
+                    successCalled = true;
+                    received = r;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Request not received.");
+
+            server.SendObject(new ShortEnvelope<LoginResponse> {
+                code = (int)(ServerCode.SUCCESS | ServerCode.FAIL),
+                data = new LoginResponse {
+                    playerData = new PlayerData {
+                        basicInfo = new PlayerData.PlayerBasicInfo("edge-bitmask", "n", 1)
+                    }
+                },
+                message = ""
+            });
+
+            yield return WaitUntil(() => successCalled, 2f, "Success path should win when both SUCCESS and FAIL bits are set.");
+
+            Assert.NotNull(received);
+            Assert.AreEqual("edge-bitmask", received.playerData.basicInfo.uid);
+        }
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenConnectFails_DispatchesConnectionError() {
+            int closedPort = TakeReleasedEphemeralLoopbackPort();
+
+            bool successCalled = false;
+            bool errorCalled = false;
+            NetworkErrorMessage receivedError = null;
+
+            LogAssert.Expect(LogType.Error, new Regex(@"\[TcpConnectionChannel\] Connect failed:"));
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                closedPort,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "no-server" },
+                _ => { successCalled = true; },
+                onError: err => {
+                    errorCalled = true;
+                    receivedError = err;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return null;
+
+            Assert.False(successCalled);
+            Assert.True(errorCalled, "onError should fire when TCP connect is refused.");
+            Assert.NotNull(receivedError);
+            Assert.AreEqual(ServerCode.CONNECTION_ERROR, receivedError.code);
+            Assert.AreEqual("Failed to connect", receivedError.message);
+        }
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_WhenSuccessOmitsDataField_InvokesOnSuccessWithDefaultLoginResponse() {
+            FakeServer server = StartFakeServer();
+
+            bool successCalled = false;
+            LoginResponse received = null;
+
+            m_networkManager.SendShortRequestWithSuccess<LoginRequest, LoginResponse>(
+                server.Port,
+                new LoginRequest { type = (int)LoginRequestType.LOGIN, uid = "edge-nodata" },
+                r => {
+                    successCalled = true;
+                    received = r;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Request not received.");
+
+            server.SendFramedUtf8("{\"code\":1,\"message\":\"ok\"}");
+
+            yield return WaitUntil(() => successCalled, 2f, "onSuccess not called for SERVICE_SUCCESS without data field.");
+
+            Assert.NotNull(received);
+            Assert.IsNull(received.playerData);
+        }
+
+        [UnityTest]
+        public IEnumerator SendShortRequest_RefreshRoomSuccess_EmptyRoomInfos_IsDelivered() {
+            FakeServer server = StartFakeServer();
+
+            bool successCalled = false;
+            RefreshRoomResponse payload = null;
+
+            m_networkManager.SendShortRequestWithSuccess<RefreshRoomRequest, RefreshRoomResponse>(
+                server.Port,
+                new RefreshRoomRequest { type = (int)HomeRequestType.LIST_ROOMS },
+                r => {
+                    successCalled = true;
+                    payload = r;
+                },
+                timeoutSeconds: 2f,
+                blockOnConnect: true);
+
+            yield return WaitUntil(() => server.TryDequeueReceived(out _), 2f, "Refresh request not received.");
+
+            server.SendShortSuccess(new RefreshRoomResponse { roomInfos = new List<RoomInfo>() });
+
+            yield return WaitUntil(() => successCalled, 2f, "Success callback not called.");
+
+            Assert.NotNull(payload);
+            Assert.NotNull(payload.roomInfos);
+            Assert.AreEqual(0, payload.roomInfos.Count);
+        }
+
+        [UnityTest]
+        public IEnumerator CreateLongConnection_KnownMainType_NullPushMessages_DispatchesMainOnly() {
+            FakeServer server = StartFakeServer();
+
+            bool mainCalled = false;
+            bool pushCalled = false;
+
+            var ch = m_networkManager.CreateLongConnection(
+                NetworkConstants.DefaultHost,
+                server.Port,
+                new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
+                    {
+                        HomeRequestType.LEAVE_ROOM,
+                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    }
+                },
+                new Dictionary<int, Action> {
+                    { 1, () => { pushCalled = true; } }
+                },
+                dispatchPushWhenMainTypeUnknown: true);
+
+            ch.Connect();
+            yield return WaitUntil(() => server.IsClientConnected, 2f, "Long connection not established.");
+
+            server.SendObject(new LongEnvelope<LeaveRoomResponse> {
+                type = (int)HomeRequestType.LEAVE_ROOM,
+                data = new LeaveRoomResponse(),
+                pushMessages = null
+            });
+
+            yield return WaitUntil(() => mainCalled, 2f, "Main handler not called.");
+            Assert.False(pushCalled, "Null pushMessages must not dispatch push handlers.");
+        }
+
+        [UnityTest]
+        public IEnumerator CreateLongConnection_KnownMainType_UnknownPushMarker_WarnsAndDispatchesKnownMarkers() {
+            FakeServer server = StartFakeServer();
+
+            bool mainCalled = false;
+            bool knownPushCalled = false;
+
+            LogAssert.Expect(LogType.Warning, "[LongConnectionInboundDispatcher] Unknown push marker 777");
+
+            var ch = m_networkManager.CreateLongConnection(
+                NetworkConstants.DefaultHost,
+                server.Port,
+                new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
+                    {
+                        HomeRequestType.LEAVE_ROOM,
+                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    }
+                },
+                new Dictionary<int, Action> {
+                    { 42, () => { knownPushCalled = true; } }
+                },
+                dispatchPushWhenMainTypeUnknown: true);
+
+            ch.Connect();
+            yield return WaitUntil(() => server.IsClientConnected, 2f, "Long connection not established.");
+
+            server.SendObject(new LongEnvelope<LeaveRoomResponse> {
+                type = (int)HomeRequestType.LEAVE_ROOM,
+                data = new LeaveRoomResponse(),
+                pushMessages = new List<int> { 777, 42 }
+            });
+
+            yield return WaitUntil(() => mainCalled && knownPushCalled, 2f, "Main or known push not dispatched.");
+
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [UnityTest]
+        public IEnumerator CreateLongConnection_WhenFrameIsInvalidJson_MainHandlerNotInvoked() {
+            FakeServer server = StartFakeServer();
+
+            bool mainCalled = false;
+
+            var ch = m_networkManager.CreateLongConnection(
+                NetworkConstants.DefaultHost,
+                server.Port,
+                new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
+                    {
+                        HomeRequestType.LEAVE_ROOM,
+                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    }
+                },
+                new Dictionary<int, Action>(),
+                dispatchPushWhenMainTypeUnknown: true);
+
+            ch.Connect();
+            yield return WaitUntil(() => server.IsClientConnected, 2f, "Long connection not established.");
+
+            server.SendFramedUtf8("{");
+
+            yield return null;
+            yield return null;
+            yield return null;
+
+            Assert.False(mainCalled);
+        }
+
+        #endregion
     }
 }

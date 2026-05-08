@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using Constants;
 using Network;
@@ -20,6 +21,7 @@ namespace Tests.PlayMode.Network {
         private readonly AutoResetEvent m_receivedEvent = new AutoResetEvent(false);
         private readonly ManualResetEventSlim m_clientConnectedEvent = new ManualResetEventSlim(false);
         private readonly object m_sendLock = new object();
+        private readonly int m_listenPort;
 
         private TcpListener m_listener;
         private TcpClient m_client;
@@ -27,12 +29,15 @@ namespace Tests.PlayMode.Network {
         private Thread m_acceptThread;
         private Thread m_receiveThread;
         private volatile bool m_running;
+        private bool m_disposed;
 
-        public int Port { get; }
+        /// <summary>Bound port after <see cref="Start"/>; for <c>port == 0</c> this is the OS-assigned ephemeral port.</summary>
+        public int Port { get; private set; }
+
         public bool IsClientConnected => m_client?.Connected == true;
 
-        public FakeServer(int port, IMessageFramer framer = null, IMessageSerializer serializer = null) {
-            Port = port;
+        public FakeServer(int port = 0, IMessageFramer framer = null, IMessageSerializer serializer = null) {
+            m_listenPort = port;
             m_framer = framer ?? new LineFramer();
             m_serializer = serializer ?? new JsonMessageSerializer();
         }
@@ -40,8 +45,9 @@ namespace Tests.PlayMode.Network {
         public void Start() {
             if (m_running) return;
 
-            m_listener = new TcpListener(IPAddress.Loopback, Port);
+            m_listener = new TcpListener(IPAddress.Loopback, m_listenPort);
             m_listener.Start();
+            Port = ((IPEndPoint)m_listener.LocalEndpoint).Port;
             m_running = true;
 
             m_acceptThread = new Thread(AcceptLoop) { IsBackground = true };
@@ -75,6 +81,25 @@ namespace Tests.PlayMode.Network {
             }
         }
 
+        /// <summary>
+        /// Sends one framed message. Unlike <see cref="SendRaw"/>, <paramref name="payload"/> may be empty
+        /// (delimiter-only frame) for protocol edge-case tests.
+        /// </summary>
+        public void SendFramedPayload(byte[] payload) {
+            if (!IsClientConnected || m_clientStream == null) return;
+
+            lock (m_sendLock) {
+                m_framer.WriteMessage(m_clientStream, payload ?? Array.Empty<byte>());
+            }
+        }
+
+        /// <summary>
+        /// UTF-8 text as the framed payload (no automatic newline — framing adds the delimiter).
+        /// </summary>
+        public void SendFramedUtf8(string text) {
+            SendFramedPayload(text == null ? Array.Empty<byte>() : Encoding.UTF8.GetBytes(text));
+        }
+
         public void SendObject<T>(T payload) where T : class {
             byte[] raw = m_serializer.Serialize(payload);
             SendRaw(raw);
@@ -102,6 +127,17 @@ namespace Tests.PlayMode.Network {
             try {
                 while (m_running) {
                     TcpClient accepted = m_listener.AcceptTcpClient();
+                    if (!m_running) {
+                        try {
+                            accepted?.Close();
+                        }
+                        catch {
+                            // ignored
+                        }
+
+                        break;
+                    }
+
                     ReplaceClient(accepted);
                 }
             }
@@ -114,10 +150,22 @@ namespace Tests.PlayMode.Network {
         }
 
         private void ReplaceClient(TcpClient newClient) {
+            if (!m_running) {
+                try {
+                    newClient?.Close();
+                }
+                catch {
+                    // ignored
+                }
+
+                return;
+            }
+
             CloseClient();
             m_client = newClient;
             m_clientStream = m_client.GetStream();
-            m_clientConnectedEvent.Set();
+            if (m_running)
+                m_clientConnectedEvent.Set();
 
             m_receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
             m_receiveThread.Start();
@@ -128,7 +176,8 @@ namespace Tests.PlayMode.Network {
                 while (m_running && m_clientStream != null) {
                     if (m_framer.TryReadMessage(m_clientStream, out byte[] message) && message != null) {
                         m_receivedMessages.Enqueue(message);
-                        m_receivedEvent.Set();
+                        if (m_running)
+                            m_receivedEvent.Set();
                     }
                     else if (!m_clientStream.CanRead) {
                         break;
@@ -163,8 +212,11 @@ namespace Tests.PlayMode.Network {
         }
 
         public void Dispose() {
+            if (m_disposed)
+                return;
+            m_disposed = true;
+
             m_running = false;
-            CloseClient();
 
             try {
                 m_listener?.Stop();
@@ -173,9 +225,23 @@ namespace Tests.PlayMode.Network {
                 // ignored
             }
 
+            TryJoin(m_acceptThread);
+            m_acceptThread = null;
+
+            CloseClient();
+
+            TryJoin(m_receiveThread);
+            m_receiveThread = null;
+
             m_listener = null;
             m_receivedEvent.Dispose();
             m_clientConnectedEvent.Dispose();
+        }
+
+        private static void TryJoin(Thread thread) {
+            if (thread == null || !thread.IsAlive)
+                return;
+            thread.Join(millisecondsTimeout: 10000);
         }
     }
 }

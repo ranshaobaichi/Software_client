@@ -1,0 +1,21 @@
+{
+    "name": "UI",
+    "rootNamespace": "UI",
+    "references": [
+        "Constants",
+        "Data",
+        "Network",
+        "Utils",
+        "UI.StateEngine",
+        "Singletons"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

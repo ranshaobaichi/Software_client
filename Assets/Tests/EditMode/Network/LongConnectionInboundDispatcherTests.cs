@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Network;
 using Network.Messages;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Tests.EditMode.Network {
     [Serializable]
@@ -53,6 +56,7 @@ namespace Tests.EditMode.Network {
             var serializer = new JsonMessageSerializer();
             byte[] raw = Encoding.UTF8.GetBytes("{\"type\":404,\"data\":{},\"pushMessages\":[99]}");
 
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[LongConnectionInboundDispatcher\] Unknown main type 404"));
             LongConnectionInboundDispatcher.Dispatch(raw, serializer, tables);
 
             Assert.That(pushCalls, Is.EqualTo(1));
@@ -68,6 +72,7 @@ namespace Tests.EditMode.Network {
             var serializer = new JsonMessageSerializer();
             byte[] raw = Encoding.UTF8.GetBytes("{\"type\":404,\"data\":{},\"pushMessages\":[99]}");
 
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[LongConnectionInboundDispatcher\] Unknown main type 404"));
             LongConnectionInboundDispatcher.Dispatch(raw, serializer, tables);
 
             Assert.That(pushCalls, Is.EqualTo(0));
