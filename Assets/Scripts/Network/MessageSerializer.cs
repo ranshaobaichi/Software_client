@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Reflection;
+using Network.Messages;
 
 namespace Network {
     public interface IMessageSerializer {
@@ -70,7 +71,46 @@ namespace Network {
                 }
             }
 
+            NormalizeBroadcastRoomStatusUnityArtifacts(deserialized, type);
+
             return deserialized;
+        }
+
+        /// <summary>
+        /// <see cref="JsonUtility"/> expands <c>null</c> reference fields into fully-elided default objects on the wire
+        /// (e.g. <c>roomInfo</c> becomes <c>{"roomId":0,...}</c>). After <see cref="JsonUtility.FromJson"/> that reads as a
+        /// non-null <see cref="RoomInfo"/> even though the sender meant absence of data—normalize back to <c>null</c>.
+        /// Heuristic: only default/zero ids and empty lists (matches JsonUtility's expansion from null).
+        /// </summary>
+        private static void NormalizeBroadcastRoomStatusUnityArtifacts(object deserialized, Type requestedType) {
+            if (deserialized == null || requestedType == null) return;
+
+            if (requestedType == typeof(BroadcastRoomStatusResponse)) {
+                NormalizeBroadcastRoomPayload(deserialized as BroadcastRoomStatusResponse);
+                return;
+            }
+
+            if (!requestedType.IsGenericType || requestedType.GetGenericTypeDefinition() != typeof(LongEnvelope<>))
+                return;
+
+            if (requestedType.GetGenericArguments()[0] != typeof(BroadcastRoomStatusResponse))
+                return;
+
+            FieldInfo dataField = requestedType.GetField("data", BindingFlags.Instance | BindingFlags.Public);
+            NormalizeBroadcastRoomPayload(dataField?.GetValue(deserialized) as BroadcastRoomStatusResponse);
+        }
+
+        private static void NormalizeBroadcastRoomPayload(BroadcastRoomStatusResponse payload) {
+            if (payload?.roomInfo == null) return;
+            if (!IsUnityNullExpandedRoomInfo(payload.roomInfo)) return;
+
+            payload.roomInfo = null;
+        }
+
+        private static bool IsUnityNullExpandedRoomInfo(RoomInfo ri) {
+            bool listsEmpty = (ri.basicInfos == null || ri.basicInfos.Count == 0)
+                    && (ri.readyUids == null || ri.readyUids.Count == 0);
+            return ri.roomId == 0 && ri.maximumPeople == 0 && listsEmpty;
         }
 
         private static string StripUtf8Bom(string json) {

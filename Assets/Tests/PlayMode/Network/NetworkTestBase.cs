@@ -1,7 +1,5 @@
 using System;
 using System.Collections;
-using System.Net;
-using System.Net.Sockets;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -12,44 +10,52 @@ namespace Tests.PlayMode.Network {
     /// Shared setup/teardown and utility helpers for network PlayMode tests.
     /// </summary>
     public abstract class NetworkPlayModeTestBase {
-        protected NetworkManager NetworkManager;
-        protected FakeServer FakeServer;
+        protected NetworkManager m_networkManager;
+        protected FakeServer m_fakeServer;
 
         [UnitySetUp]
         public virtual IEnumerator SetUp() {
-            NetworkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
-            if (NetworkManager == null)
-                NetworkManager = NetworkManager.SInstance;
+            m_networkManager = UnityEngine.Object.FindObjectOfType<NetworkManager>();
+            if (m_networkManager == null)
+                m_networkManager = global::Network.NetworkManager.SInstance;
 
             yield return null;
         }
 
         [UnityTearDown]
         public virtual IEnumerator TearDown() {
-            FakeServer?.Dispose();
-            FakeServer = null;
+            m_fakeServer?.Dispose();
+            m_fakeServer = null;
 
-            if (NetworkManager != null) {
-                UnityEngine.Object.Destroy(NetworkManager.gameObject);
-                NetworkManager = null;
+            if (m_networkManager != null) {
+                UnityEngine.Object.Destroy(m_networkManager.gameObject);
+                m_networkManager = null;
             }
 
             yield return null;
         }
 
-        protected int ReserveLocalPort() {
-            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
+        /// <summary>
+        /// Binds an ephemeral TCP port on loopback, then releases it. A subsequent connect to the returned port
+        /// should be refused when nothing else has bound it since release (stronger than probing with a temporary listener).
+        /// </summary>
+        protected static int TakeReleasedEphemeralLoopbackPort() {
+            var server = new FakeServer(0);
+            server.Start();
+            try {
+                return server.Port;
+            }
+            finally {
+                server.Dispose();
+            }
         }
 
         protected FakeServer StartFakeServer(int? port = null) {
-            int targetPort = port ?? ReserveLocalPort();
-            FakeServer = new FakeServer(targetPort);
-            FakeServer.Start();
-            return FakeServer;
+            m_fakeServer?.Dispose();
+            int listenPort = port ?? 0;
+            m_fakeServer = new FakeServer(listenPort);
+            m_fakeServer.Start();
+            return m_fakeServer;
         }
 
         protected IEnumerator WaitUntil(Func<bool> predicate, float timeoutSeconds = 2f, string timeoutMessage = null) {
