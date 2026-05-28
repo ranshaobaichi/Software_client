@@ -48,7 +48,6 @@ module_map:
       - "Assets/Scripts/UI/Dialogs/LoginPageDialogs/**/*.cs"
       - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
       - "Assets/Scripts/Constants/NetworkConstants.cs"
-    server_glob: ""
   开始界面:
     client_glob:
       - "Assets/Scripts/UI/Views/HomeViews/HomeButtonAreaView.cs"
@@ -57,7 +56,6 @@ module_map:
       - "Assets/Scripts/UI/ViewModels/HomeViewModels/PersonalHomepageViewModel.cs"
       - "Assets/Scripts/UI/States/HomeStates/HomeState.cs"
       - "Assets/Scripts/UI/Models/HomeModels.cs"
-    server_glob: ""
   联机大厅:
     client_glob:
       - "Assets/Scripts/UI/States/HomeStates/OnlineLobbyState.cs"
@@ -68,26 +66,20 @@ module_map:
       - "Assets/Scripts/UI/Dialogs/HomePageDialogs/JoinRoomDialog.cs"
       - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
       - "Assets/Scripts/Constants/NetworkConstants.cs"
-    server_glob: ""
   地图:
     client_glob: "Assets/Scripts/UI/States/BattleStates/MapState.cs"
-    server_glob: ""
   商店:
     client_glob: "Assets/Scripts/UI/States/BattleStates/ShopState.cs"
-    server_glob: ""
   战斗:
     client_glob:
       - "Assets/Scripts/UI/Pages/BattlePage.cs"
       - "Assets/Scripts/Battle/**/*.cs"
-    server_glob: ""
   网络相关:
     client_glob:
       - "Assets/Scripts/Network/**/*.cs"
       - "Assets/Scripts/Constants/NetworkConstants.cs"
       - "Assets/Scripts/SimpleNetworkClient2D.cs"
-    server_glob: ""
   玩家存档:
     client_glob:
       - "Assets/Scripts/Data/PlayerData.cs"
       - "Assets/Scripts/Data/LocalizeData.cs"
-    server_glob: ""
