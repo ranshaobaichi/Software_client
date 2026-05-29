@@ -119,9 +119,8 @@ namespace Tests.PlayMode.Network {
                 blockOnConnect: true);
 
             // Assert that server receives client request.
-            byte[] clientRaw = null;
             yield return WaitUntil(
-                () => server.TryDequeueReceived(out clientRaw),
+                () => server.TryDequeueReceived(out _),
                 timeoutSeconds: 2f,
                 timeoutMessage: "FakeServer did not receive client request in time.");
 
@@ -188,7 +187,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(payload => {
+                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(payload => {
                         mainCalled = true;
                         mainPayload = payload;
                     })
@@ -240,7 +239,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                 }
             };
 
@@ -288,7 +287,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                 }
             };
 
@@ -660,7 +659,7 @@ namespace Tests.PlayMode.Network {
             var mainHandlers = new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.BROADCAST,
-                    m_networkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(payload => {
+                    NetworkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(payload => {
                         broadcastCalled = true;
                         received = payload;
                     })
@@ -702,7 +701,7 @@ namespace Tests.PlayMode.Network {
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
+                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
                     }
                 },
                 new Dictionary<int, Action>(),
@@ -739,7 +738,7 @@ namespace Tests.PlayMode.Network {
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
+                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { })
                     }
                 },
                 new Dictionary<int, Action>(),
@@ -999,7 +998,7 @@ namespace Tests.PlayMode.Network {
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                     }
                 },
                 new Dictionary<int, Action> {
@@ -1035,7 +1034,7 @@ namespace Tests.PlayMode.Network {
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                     }
                 },
                 new Dictionary<int, Action> {
@@ -1069,7 +1068,7 @@ namespace Tests.PlayMode.Network {
                 new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                     {
                         HomeRequestType.LEAVE_ROOM,
-                        m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
+                        NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(_ => { mainCalled = true; })
                     }
                 },
                 new Dictionary<int, Action>(),
