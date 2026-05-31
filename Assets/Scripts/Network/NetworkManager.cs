@@ -349,7 +349,7 @@ namespace Network {
                     } else {
                         onError?.Invoke(new NetworkErrorMessage {
                                 code = code,
-                                message = envelopeProbe.message ?? "Unknown error"
+                                message = string.IsNullOrWhiteSpace(envelopeProbe.message) ? "Unknown error" : envelopeProbe.message
                         });
                     }
                 } finally {
