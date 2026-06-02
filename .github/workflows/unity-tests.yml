@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run tests (Edit + Play)
+        id: tests
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -34,9 +35,153 @@ jobs:
           unityVersion: 2022.3.28f1
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Print failed test details
+        if: always()
+        env:
+          ARTIFACTS_DIR: ${{ steps.tests.outputs.artifactsPath || 'artifacts' }}
+        run: |
+          echo "::group::Failed test details"
+          python3 <<'PY'
+          import os
+          import re
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          ARTIFACTS_DIR = Path(os.environ.get("ARTIFACTS_DIR", "artifacts"))
+
+          def local_tag(element):
+              return element.tag.split("}", 1)[-1]
+
+          def iter_test_cases(element):
+              for child in element:
+                  tag = local_tag(child)
+                  if tag == "test-case":
+                      yield child
+                  elif tag == "test-suite":
+                      yield from iter_test_cases(child)
+
+          def get_attr(elem, name, default=""):
+              return elem.attrib.get(name, default)
+
+          def parse_failure(test_case):
+              for child in test_case:
+                  if local_tag(child) != "failure":
+                      continue
+                  message = ""
+                  stack_trace = ""
+                  for part in child:
+                      part_tag = local_tag(part)
+                      if part_tag == "message":
+                          message = (part.text or "").strip()
+                      elif part_tag == "stack-trace":
+                          stack_trace = (part.text or "").strip()
+                  return message, stack_trace
+              return None
+
+          def parse_expected_actual(message):
+              if not message:
+                  return None, None
+              match = re.search(
+                  r"Expected:\s*(.+?)\s*(?:\r?\n)\s*But was:\s*(.+)",
+                  message,
+                  re.DOTALL | re.IGNORECASE,
+              )
+              if match:
+                  return match.group(1).strip(), match.group(2).strip()
+              return None, message.strip()
+
+          def normalize_file_path(path):
+              path = path.strip()
+              for marker in ("Assets/", "Packages/"):
+                  idx = path.find(marker)
+                  if idx != -1:
+                      return path[idx:]
+              return path
+
+          def parse_file_path(stack_trace):
+              if not stack_trace:
+                  return None, None
+              match = re.search(r"in (.+?):line (\d+)", stack_trace)
+              if not match:
+                  return None, None
+              return normalize_file_path(match.group(1)), match.group(2)
+
+          def main():
+              if not ARTIFACTS_DIR.exists():
+                  print(f"No test artifacts found at {ARTIFACTS_DIR}; skipping failure report.")
+                  return 0
+
+              xml_files = sorted(ARTIFACTS_DIR.rglob("*.xml"))
+              if not xml_files:
+                  print(f"No XML result files under {ARTIFACTS_DIR}")
+                  return 0
+
+              failed = []
+              for xml_file in xml_files:
+                  try:
+                      root = ET.parse(xml_file).getroot()
+                  except ET.ParseError as exc:
+                      print(f"::warning::Failed to parse {xml_file}: {exc}")
+                      continue
+
+                  mode = xml_file.parent.name or xml_file.stem
+                  for test_case in iter_test_cases(root):
+                      result = get_attr(test_case, "result", "").lower()
+                      if result not in ("failed", "error"):
+                          continue
+
+                      failure = parse_failure(test_case)
+                      message, stack_trace = failure if failure else ("", "")
+                      expected, actual = parse_expected_actual(message)
+                      file_path, line = parse_file_path(stack_trace)
+
+                      failed.append({
+                          "mode": mode,
+                          "name": get_attr(test_case, "fullname") or get_attr(test_case, "name"),
+                          "file": file_path or "(unknown)",
+                          "line": line or "",
+                          "expected": expected or "(see message)",
+                          "actual": actual or "(see message)",
+                          "message": message,
+                          "stack_trace": stack_trace,
+                      })
+
+              if not failed:
+                  print("All tests passed (no failures in result XML).")
+                  return 0
+
+              print(f"\n{'=' * 72}")
+              print(f"FAILED TESTS: {len(failed)}")
+              print(f"{'=' * 72}\n")
+
+              for index, item in enumerate(failed, 1):
+                  print(f"[{index}] {item['name']}")
+                  print(f"    Mode:      {item['mode']}")
+                  location = item["file"]
+                  if item["line"]:
+                      location = f"{location}:{item['line']}"
+                  print(f"    File:      {location}")
+                  print(f"    Expected:  {item['expected']}")
+                  print(f"    Actual:    {item['actual']}")
+                  if item["message"] and item["expected"] == "(see message)":
+                      print(f"    Message:   {item['message']}")
+                  if item["stack_trace"]:
+                      print("    Stack:")
+                      for line in item["stack_trace"].splitlines()[:5]:
+                          print(f"      {line.strip()}")
+                  print()
+
+              print(f"{'=' * 72}")
+              return 0
+
+          sys.exit(main())
+          PY
+          echo "::endgroup::"
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unity-test-results
-          path: artifacts
+          path: ${{ steps.tests.outputs.artifactsPath || 'artifacts' }}

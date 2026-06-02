@@ -23,21 +23,21 @@ namespace Tests.PlayMode.Business {
                     new PlayerData.PlayerBasicInfo("u1", "p1", 1),
                     new PlayerData.PlayerBasicInfo("u2", "p2", 2)
                 },
-                readyUids = new List<string>(readyUids ?? System.Array.Empty<string>())
+                readyUids = new List<string>(readyUids ?? Array.Empty<string>())
             };
         }
 
         static Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> CreateOnlineRoomStyleMainHandlers(
-                System.Action<BroadcastRoomStatusResponse> onBroadcast,
-                System.Action<LeaveRoomResponse> onLeave) {
+                Action<BroadcastRoomStatusResponse> onBroadcast,
+                Action<LeaveRoomResponse> onLeave) {
             return new Dictionary<HomeRequestType, LongConnectionMainDispatchEntry> {
                 {
                     HomeRequestType.BROADCAST,
-                    m_networkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(onBroadcast)
+                    NetworkManager.CreateDispatchEntry<BroadcastRoomStatusResponse>(onBroadcast)
                 },
                 {
                     HomeRequestType.LEAVE_ROOM,
-                    m_networkManager.CreateDispatchEntry<LeaveRoomResponse>(onLeave)
+                    NetworkManager.CreateDispatchEntry<LeaveRoomResponse>(onLeave)
                 }
             };
         }
@@ -288,6 +288,8 @@ namespace Tests.PlayMode.Business {
             var ser = new JsonMessageSerializer();
             var first = ser.Deserialize(a, typeof(SetReadyStatusRequest)) as SetReadyStatusRequest;
             var second = ser.Deserialize(b, typeof(SetReadyStatusRequest)) as SetReadyStatusRequest;
+            Assert.NotNull(first);
+            Assert.NotNull(second);
             Assert.True(first.ready);
             Assert.False(second.ready);
 

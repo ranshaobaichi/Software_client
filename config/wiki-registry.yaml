@@ -74,6 +74,9 @@ module_map:
     client_glob:
       - "Assets/Scripts/UI/Pages/BattlePage.cs"
       - "Assets/Scripts/Battle/**/*.cs"
+      - "Assets/Scripts/Configs/Weapons/**/*.cs"
+      - "Assets/Resources/Config/Weapons/**/*.asset"
+      - "Assets/Resources/weapon_data.json"
   网络相关:
     client_glob:
       - "Assets/Scripts/Network/**/*.cs"
