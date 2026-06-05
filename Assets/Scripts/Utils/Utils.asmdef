@@ -1,7 +1,9 @@
 {
     "name": "Utils",
     "rootNamespace": "Utils",
-    "references": [],
+    "references": [
+        "Unity.UGUI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

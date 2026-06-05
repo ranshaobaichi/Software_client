@@ -2,7 +2,8 @@
     "name": "Singletons",
     "rootNamespace": "",
     "references": [
-        "Constants"
+        "Constants",
+        "Unity.UGUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
