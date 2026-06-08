@@ -2,10 +2,21 @@
 
 | 入口 | 触发 | ECS |
 |------|------|-----|
-| 刷新缓存 | IDE 主动 | `POST /jobs/refresh-cache` |
+| 刷新缓存 | IDE 主动（对齐/对比/写回前先调，当前模块；**默认 revision 比对**） | `POST /jobs/refresh-cache` |
 | 对比 | IDE 主动，只读 | `POST /jobs/api-compare` |
-| 对齐代码 | IDE 主动 | `GET /api/snapshot` + 改现有文件 |
-| 写回文档 | IDE 主动 | `POST /jobs/api-doc-sync` |
+| 对齐代码 | IDE 主动 | refresh → `GET /api/snapshot` + 改现有文件 |
+| 写回文档 | IDE 主动 / CI main | `POST /jobs/api-doc-sync` |
+| CI 自动 | GitHub Actions PR/main | `scripts/ci/run_sync_job.py`（TTL 过期后 refresh，ECS 侧仍做 revision 比对） |
+
+## refresh-cache Body
+
+```json
+{ "module": "战斗", "force": false }
+```
+
+- 默认：ECS 用 `lark-cli docs +fetch --scope outline --max-depth 0` 探测飞书 `revision_id`，与本地快照一致则 **跳过** 全量拉取（响应 `skipped`）。
+- `"force": true`：跳过比对，始终全量拉取并更新缓存。
+- 用户说「飞书刚改完 / 强制刷新」→ Agent 传 `"force": true`。
 
 ## api-compare Body
 
@@ -13,9 +24,15 @@
 {
   "module": "战斗",
   "repo": "client",
-  "files": { "Assets/Scripts/Battle/Foo.cs": "<文件全文>" }
+  "files": { "Assets/Scripts/Battle/Foo.cs": "<文件全文>" },
+  "target": null,
+  "scoped": true
 }
 ```
+
+- `target`：`api_docs` / `type_constraints`；省略时按快照自动分流
+- `scoped`：true 时仅报告 glob 命中文件内的代码类型（忽略跨模块共享头噪声）
+- 别名：`config/message_aliases.yaml`（中文章节 → 英文类型名）
 
 对比按 **章节 + 方向（client/server）+ 消息名** 分组，字段级比对 **name / type / optional**；`网络相关` 等模块额外提示 PacketType/MSG 常量。
 
