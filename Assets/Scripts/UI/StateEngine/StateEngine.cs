@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UI.Page;
 
 namespace UI.StateEngine {
     /// <summary>
@@ -122,6 +123,8 @@ namespace UI.StateEngine {
             SetBusy(true);
             try {
                 var top = m_stack.Peek();
+                var isLastStateInPage = (m_stack.Count == 1);
+
                 top.DoPause();
                 m_notifier?.OnStatePause(top);
 
@@ -131,7 +134,16 @@ namespace UI.StateEngine {
                 m_statesMessages.Remove(top.GetType());
                 top.gameObject.SetActive(false);
 
-                if (!isEmpty) {
+                if (isLastStateInPage) {
+             
+                    var finder = new UIPageFinder();
+                    var pageInterface = finder.Current(top.transform);
+                    if (pageInterface.IsValid && !pageInterface.IsHome) {
+                        pageInterface.PopPage();
+                        return true;
+                    }
+                } else {
+                
                     var newTop = m_stack.Peek();
                     newTop.gameObject.SetActive(true);
                     newTop.DoResume();

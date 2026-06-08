@@ -39,6 +39,12 @@ namespace UI.StateEngine {
                 }
                 return dialogMgr;
             }
+            /// <summary>
+            /// 退回上一个 Page（由 PageController 控制）
+            /// </summary>
+            public void PopPage() {
+                m_pageController?.PopPage();
+            }
         }
         #endregion
 
