@@ -42,26 +42,19 @@ modules:
 module_map:
   登录界面:
     client_glob:
-      - "Assets/Scripts/UI/Views/LoginViews/**/*.cs"
-      - "Assets/Scripts/UI/ViewModels/LoginViewModels/**/*.cs"
-      - "Assets/Scripts/UI/States/LoginStates/**/*.cs"
-      - "Assets/Scripts/UI/Dialogs/LoginPageDialogs/**/*.cs"
+      - "Assets/Scripts/UI/ViewModels/LoginViewModels/LoginViewModel.cs"
+      - "Assets/Scripts/UI/Dialogs/LoginPageDialogs/RegisterDialog.cs"
       - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
       - "Assets/Scripts/Constants/NetworkConstants.cs"
   开始界面:
     client_glob:
       - "Assets/Scripts/UI/Views/HomeViews/HomeButtonAreaView.cs"
-      - "Assets/Scripts/UI/Views/HomeViews/PersonalHomepageView.cs"
-      - "Assets/Scripts/UI/ViewModels/HomeViewModels/HomeButtonAreaViewModel.cs"
-      - "Assets/Scripts/UI/ViewModels/HomeViewModels/PersonalHomepageViewModel.cs"
-      - "Assets/Scripts/UI/States/HomeStates/HomeState.cs"
-      - "Assets/Scripts/UI/Models/HomeModels.cs"
+      - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
+      - "Assets/Scripts/Constants/NetworkConstants.cs"
   联机大厅:
     client_glob:
       - "Assets/Scripts/UI/States/HomeStates/OnlineLobbyState.cs"
       - "Assets/Scripts/UI/States/HomeStates/OnlineRoomState.cs"
-      - "Assets/Scripts/UI/Views/HomeViews/RoomItemView.cs"
-      - "Assets/Scripts/UI/ViewModels/HomeViewModels/RoomItemViewModel.cs"
       - "Assets/Scripts/UI/Dialogs/HomePageDialogs/CreateRoomDialog.cs"
       - "Assets/Scripts/UI/Dialogs/HomePageDialogs/JoinRoomDialog.cs"
       - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
@@ -69,14 +62,16 @@ module_map:
   地图:
     client_glob: "Assets/Scripts/UI/States/BattleStates/MapState.cs"
   商店:
-    client_glob: "Assets/Scripts/UI/States/BattleStates/ShopState.cs"
+    client_glob:
+      - "Assets/Scripts/UI/States/BattleStates/ShopState.cs"
+      - "Assets/Scripts/UI/ViewModels/ShopViewModels/ShopViewModel.cs"
+      - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
+      - "Assets/Scripts/Constants/NetworkConstants.cs"
   战斗:
     client_glob:
-      - "Assets/Scripts/UI/Pages/BattlePage.cs"
-      - "Assets/Scripts/Battle/**/*.cs"
-      - "Assets/Scripts/Configs/Weapons/**/*.cs"
-      - "Assets/Resources/Config/Weapons/**/*.asset"
-      - "Assets/Resources/weapon_data.json"
+      - "Assets/Scripts/SimpleNetworkClient2D.cs"
+      - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
+      - "Assets/Scripts/Constants/NetworkConstants.cs"
   网络相关:
     client_glob:
       - "Assets/Scripts/Network/**/*.cs"
