@@ -2,29 +2,11 @@
 
 | 入口 | 触发 | ECS |
 |------|------|-----|
-<<<<<<< HEAD
-| 刷新缓存 | IDE 主动（对齐/对比/写回前先调，当前模块；**默认 revision 比对**） | `POST /jobs/refresh-cache` |
-| 对比 | IDE 主动，只读 | `POST /jobs/api-compare` |
-| 对齐代码 | IDE 主动 | refresh → `GET /api/snapshot` + 改现有文件 |
-| 写回文档 | IDE 主动 / CI main | `POST /jobs/api-doc-sync` |
-| CI 自动 | GitHub Actions PR/main | `scripts/ci/run_sync_job.py`（TTL 过期后 refresh，ECS 侧仍做 revision 比对） |
-
-## refresh-cache Body
-
-```json
-{ "module": "战斗", "force": false }
-```
-
-- 默认：ECS 用 `lark-cli docs +fetch --scope outline --max-depth 0` 探测飞书 `revision_id`，与本地快照一致则 **跳过** 全量拉取（响应 `skipped`）。
-- `"force": true`：跳过比对，始终全量拉取并更新缓存。
-- 用户说「飞书刚改完 / 强制刷新」→ Agent 传 `"force": true`。
-=======
 | 刷新缓存 | IDE 主动（对齐/对比/写回**前必做**，当前模块） | `POST /jobs/refresh-cache` |
 | 对比 | IDE 主动，只读 | `POST /jobs/api-compare` |
 | 对齐代码 | IDE 主动 | refresh → `GET /api/snapshot` + 改现有文件 |
 | 写回文档 | IDE 主动 / CI main | `POST /jobs/api-doc-sync` |
 | CI 自动 | GitHub Actions PR/main | `scripts/ci/run_sync_job.py` |
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 
 ## api-compare Body
 

@@ -29,11 +29,7 @@ description: >-
 ### 对齐代码到文档
 
 1. 确认模块名；必要时 `GET /api/snapshot/modules`
-<<<<<<< HEAD
-2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**；默认 **revision 未变则跳过**全量拉取，见下）
-=======
 2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，取 snapshot 前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 3. `GET /api/snapshot?module=<模块名>` 取快照
 4. **划定文件范围**（必读 `references/registry-globs.md`）：
    - 从 `config/wiki-registry.yaml` 读本仓 `client_glob` / `server_glob` 并解析命中文件；
@@ -45,11 +41,7 @@ description: >-
 
 ### 对比文档与实现（只读）
 
-<<<<<<< HEAD
-1. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**；默认 revision 比对，未变则 `skipped`）
-=======
 1. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，对比前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 2. 按 `references/registry-globs.md` 合并 glob、用户指定与必要目录排查，得到最终文件集
 3. 若发现漏网协议文件，先更新 `wiki-registry.yaml` 中 glob（可选，但推荐与对齐流程一致）
 4. `POST /jobs/api-compare`（Body：`module`、`repo`、`files`；可选 `target`、`scoped: true`）
@@ -57,27 +49,14 @@ description: >-
 
 ### 刷新 ECS 缓存
 
-`POST /jobs/refresh-cache`：
-
-| Body | 行为 |
-|------|------|
-| `{"module":"<模块名>"}` | 单模块；**先比对飞书 `revision_id`**，与缓存一致则跳过全量拉取 |
-| `{"module":"<模块名>","force":true}` | 跳过 revision 比对，**强制**全量拉取 |
-| `{}` | 全量模块（同样默认 revision 比对） |
-| `{"force":true}` | 全量强制刷新 |
-
-用户说「飞书刚改完 / 强制刷新」时用 `"force": true`。响应含 `modules`（已刷新）、`skipped`（revision 未变跳过）。
+`POST /jobs/refresh-cache`，Body：`{"module":"<模块名>"}` 或 `{}` 全量
 
 ### 同步文档草稿到飞书
 
 用户说「根据当前代码变更，生成飞书文档更新草稿」时：
 
 1. 先执行 `references/env-setup.md` 中的环境变量。
-<<<<<<< HEAD
-2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（默认 revision 比对；用户要求强制时加 `"force":true`）
-=======
 2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，读 snapshot 前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 3. **必读** `references/doc-write-format.md`：模式 A → **h2 主题**、**禁止 h1 子主题**、**禁止 caption 当分区**、**禁止 docx_draft 含【合并位置】**；enum+type → **两个 pre**；**禁止**实例行。ECS 按 `repo` 插入 **h1 客户端/服务端** 分区末尾。
 4. 生成 **DocxXML**（伪 TS），`target` 与 `repo` 一致。
 5. `POST /jobs/api-doc-sync`（`docx_draft` 与 `summary` 至少其一）。
