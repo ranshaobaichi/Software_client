@@ -17,12 +17,8 @@ $h = @{ Authorization = "Bearer $env:API_SYNC_TOKEN" }
 | GET | `/health` | 无需 Token |
 | GET | `/api/snapshot/modules` | 已有快照模块列表 |
 | GET | `/api/snapshot?module=战斗` | 模块快照 JSON |
-<<<<<<< HEAD
 | POST | `/jobs/refresh-cache` | Body：`{"module":"战斗"}`；可选 `"force":true` 跳过 revision 比对 |
-=======
-| POST | `/jobs/refresh-cache` | Body：`{"module":"战斗"}` 或 `{}` |
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
-| POST | `/jobs/api-compare` | Body：`module`、`repo`、`files`；可选 `target`、`scoped` |
+| POST | `/jobs/api-compare` | Body：`module`、`repo`、`files`（**须含** `config/message_aliases.yaml`）；可选 `target`、`scoped` |
 | POST | `/jobs/api-doc-sync` | Body：`module`、`repo`、`summary`、`files_changed`、`docx_draft`、`target` |
 | GET | `/api/status` | 各模块 `cached_at`、`fetched_at`、`api_docs`/`type_constraints` revision |
 
