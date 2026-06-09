@@ -29,30 +29,28 @@ description: >-
 ### 对齐代码到文档
 
 1. 确认模块名；必要时 `GET /api/snapshot/modules`
-<<<<<<< HEAD
 2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**；默认 **revision 未变则跳过**全量拉取，见下）
-=======
-2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，取 snapshot 前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 3. `GET /api/snapshot?module=<模块名>` 取快照
 4. **划定文件范围**（必读 `references/registry-globs.md`）：
    - 从 `config/wiki-registry.yaml` 读本仓 `client_glob` / `server_glob` 并解析命中文件；
    - **结合用户要求**（@ 文件、指定目录、排除项）；
-   - glob 不准或命中异常时 **自行查看仓库目录/搜索**，合并去重后得到最终文件集。
-4. 用户或 Agent 发现**不在 glob 中**的协议文件时，**更新** `wiki-registry.yaml` 中对应 glob（优先改为显式路径列表），再继续对齐。
-5. 只改最终范围内的**已有**协议源文件；**禁止** `Generated/`
-6. 列出变更摘要与 registry 是否有改动；由用户自行 commit
+   - glob 不准或命中异常时 **自行查看仓库目录/搜索**，合并去重后得到**待对齐路径清单**。
+5. **Glob 门禁（改代码前必做）**：
+   - 对清单中每个待改路径，检查是否已被当前模块 glob 命中；
+   - 可运行（在游戏仓根目录）：  
+     `python <中央仓>/scripts/check_glob_for_align.py --module <模块> --repo client|server --paths <路径...> [--user-explicit <用户@的路径...>]`
+   - **不在 glob 中**且为协议源文件（含消息 struct / enum）→ **自动更新** `config/wiki-registry.yaml`：在 `module_map.<模块>` 的 `client_glob` / `server_glob` 中**追加显式路径**（优先 YAML 列表，保留原有正确条目）；
+   - **勿自动加入 glob**：`.prefab` / `.unity` / `.asset` / 图片音频、`Resources/`、`Editor/`、`Tests/`、纯 UI/ViewModel/State 视图层（用户 **@ 明确指定** 时除外）；
+   - 更新 registry 后 **暂停并提醒用户核对 glob 路径**（列出新增项与 `skipped_auto_add` 原因），用户确认或修正后再继续改代码。
+6. 只改最终范围内的**已有**协议源文件；**禁止** `Generated/`
+7. 列出变更摘要与 registry 是否有改动；由用户自行 commit
 
 ### 对比文档与实现（只读）
 
-<<<<<<< HEAD
 1. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**；默认 revision 比对，未变则 `skipped`）
-=======
-1. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，对比前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 2. 按 `references/registry-globs.md` 合并 glob、用户指定与必要目录排查，得到最终文件集
 3. 若发现漏网协议文件，先更新 `wiki-registry.yaml` 中 glob（可选，但推荐与对齐流程一致）
-4. `POST /jobs/api-compare`（Body：`module`、`repo`、`files`；可选 `target`、`scoped: true`）
+4. `POST /jobs/api-compare`（Body：`module`、`repo`、`files`；**须含** `config/message_aliases.yaml` 全文；可选 `target`、`scoped: true`）
 5. 展示 `report_md` 与 `defects`（支持 `config/message_aliases.yaml` 别名匹配）；**不改代码**
 
 ### 刷新 ECS 缓存
@@ -73,11 +71,7 @@ description: >-
 用户说「根据当前代码变更，生成飞书文档更新草稿」时：
 
 1. 先执行 `references/env-setup.md` 中的环境变量。
-<<<<<<< HEAD
 2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（默认 revision 比对；用户要求强制时加 `"force":true`）
-=======
-2. **`POST /jobs/refresh-cache`**，Body：`{"module":"<模块名>"}`（**仅当前模块**，读 snapshot 前必做）
->>>>>>> e7032f66f2cdc033658663a527b628ba9ff9a3b4
 3. **必读** `references/doc-write-format.md`：模式 A → **h2 主题**、**禁止 h1 子主题**、**禁止 caption 当分区**、**禁止 docx_draft 含【合并位置】**；enum+type → **两个 pre**；**禁止**实例行。ECS 按 `repo` 插入 **h1 客户端/服务端** 分区末尾。
 4. 生成 **DocxXML**（伪 TS），`target` 与 `repo` 一致。
 5. `POST /jobs/api-doc-sync`（`docx_draft` 与 `summary` 至少其一）。

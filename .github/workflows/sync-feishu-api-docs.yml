@@ -2,33 +2,19 @@ name: Sync Feishu API Docs (client)
 
 on:
   pull_request:
-    paths:
-      - 'Assets/Scripts/**'
-      - 'config/wiki-registry.yaml'
-      - 'config/message_aliases.yaml'
-  push:
+    types: [closed]
     paths:
       - 'Assets/Scripts/**'
       - 'config/wiki-registry.yaml'
       - 'config/message_aliases.yaml'
 
 jobs:
-  compare:
-    if: github.event_name == 'pull_request'
-    uses: Pluto599/game-api-sync/.github/workflows/api-doc-sync-reusable.yml@main
-    secrets:
-      API_SYNC_TOKEN: ${{ secrets.API_SYNC_TOKEN }}
-    with:
-      game_repo: client
-      mode: pr
-      base_ref: ${{ github.base_ref }}
-
   sync:
-    if: github.event_name == 'push'
+    if: github.event.pull_request.merged == true
     uses: Pluto599/game-api-sync/.github/workflows/api-doc-sync-reusable.yml@main
     secrets:
       API_SYNC_TOKEN: ${{ secrets.API_SYNC_TOKEN }}
     with:
       game_repo: client
-      mode: main
-      base_ref: ${{ github.event.before }}
+      base_ref: ${{ github.event.pull_request.base.sha }}
+      merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}
