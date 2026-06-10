@@ -66,6 +66,7 @@ module_map:
       - "Assets/Scripts/UI/States/BattleStates/ShopState.cs"
       - "Assets/Scripts/UI/ViewModels/ShopViewModels/ShopViewModel.cs"
       - "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs"
+      - "Assets/Scripts/Network/NetModels/ShopGitActionsTestProtocol.cs"
       - "Assets/Scripts/Constants/NetworkConstants.cs"
   战斗:
     client_glob:
