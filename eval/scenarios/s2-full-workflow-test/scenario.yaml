@@ -1,0 +1,75 @@
+id: s2-full-workflow-test
+title: game-api-sync 四流程 eval（刷新 / 对比 / 对齐代码 / 写回草稿）
+repo: client
+
+central_repo: ../game-api-sync
+forbid_sync: true
+
+# 步骤 3：文档 → 代码（战斗模块；需先将 feishu-battle-doc-insert.md 写入飞书）
+battle_module: 战斗
+align_file: Assets/Scripts/Network/NetModels/BattleProtocolApiSync_Test.cs
+align_golden: expected_battle_align.cs
+
+# 步骤 4：代码 → 文档草稿（商店 glob 漏网 + 网络 type_constraints）
+doc_draft_file: Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs
+
+# 步骤 2 compare 使用的战斗 glob 文件（不含 align_file，对齐前代码侧无 Eval 协议）
+compare_files:
+  - Assets/Scripts/SimpleNetworkClient2D.cs
+  - Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs
+  - Assets/Scripts/Constants/NetworkConstants.cs
+  - config/message_aliases.yaml
+
+run_artifacts:
+  refresh: refresh_battle.json
+  compare: compare_battle.json
+  compare_report: compare_report.md
+  shop_draft: shop_doc_draft.json
+  network_draft: network_doc_draft.json
+
+golden_files:
+  compare: compare_battle.json
+  shop_draft: shop_doc_draft.json
+  network_draft: network_doc_draft.json
+
+compare_report_symbols:
+  - BattleTestActionRequest
+  - Eval战斗测试协议
+
+align_symbols:
+  include:
+    - BattleTestActionKind
+    - BattleTestActionRequest
+  exclude:
+    - ShopTestPurchaseRequest
+    - BattleTestTurnStartNotify
+    - BattleTestActionResponse
+
+doc_draft_modules:
+  - name: 商店
+    run_file_key: shop_draft
+    golden_key: shop_draft
+    expected_targets:
+      - api_docs
+    expected_in_glob: false
+  - name: 网络相关
+    run_file_key: network_draft
+    golden_key: network_draft
+    expected_targets:
+      - type_constraints
+    expected_in_glob: true
+
+expected_symbols:
+  商店:
+    api_docs:
+      include:
+        - ShopTestPurchaseRequest
+      exclude:
+        - ShopTestShelfKind
+  网络相关:
+    type_constraints:
+      include:
+        - ShopTestShelfKind
+        - IShopTestPriceResolver
+      exclude:
+        - ShopTestPurchaseRequest

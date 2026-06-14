@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "module": "网络相关",
+  "repo": "client",
+  "paths": [
+    "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+  ],
+  "glob": {
+    "module": "网络相关",
+    "repo": "client",
+    "glob_key": "client_glob",
+    "in_glob": [
+      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+    ],
+    "missing_from_glob": [],
+    "skipped_auto_add": {},
+    "suggested_glob": [
+      "Assets/Scripts/Network/**/*.cs",
+      "Assets/Scripts/Constants/NetworkConstants.cs",
+      "Assets/Scripts/SimpleNetworkClient2D.cs"
+    ],
+    "needs_registry_update": false,
+    "registry_applied": false,
+    "registry_path": "config\\wiki-registry.yaml"
+  },
+  "user_action_required": null,
+  "drafts": [
+    {
+      "target": "type_constraints",
+      "classification": {
+        "classification": "code_ahead",
+        "sync_recommended": true,
+        "has_missing_in_code": false,
+        "has_missing_in_doc": true,
+        "has_type_conflict": false
+      },
+      "sync_recommended": true,
+      "files_changed": [
+        "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+      ],
+      "docx_draft": "<h1>类型补充（agent生成，待审查）</h1><pre lang=\"TypeScript\"><code>enum ShopTestShelfKind { daily = 0, premium = 1, event = 2 }\ninterface IShopTestPriceResolver { TryResolve(); GetShelfKind(); }</code></pre>",
+      "skipped": false,
+      "api_doc_sync_body": {
+        "module": "网络相关",
+        "repo": "client",
+        "target": "type_constraints",
+        "summary": "Agent draft 网络相关/type_constraints (code_ahead)",
+        "files_changed": [
+          "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+        ],
+        "docx_draft": "<h1>类型补充（agent生成，待审查）</h1><pre lang=\"TypeScript\"><code>enum ShopTestShelfKind { daily = 0, premium = 1, event = 2 }\ninterface IShopTestPriceResolver { TryResolve(); GetShelfKind(); }</code></pre>"
+      }
+    }
+  ],
+  "sync_results": null
+}

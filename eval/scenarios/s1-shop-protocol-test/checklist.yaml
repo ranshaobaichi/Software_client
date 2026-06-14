@@ -1,0 +1,29 @@
+# 编排分：人工在 orchestration.yaml 中勾选，或由 Copilot 填 true/false
+items:
+  - id: env_vars
+    label: 设置了 API_SYNC_BASE / API_SYNC_TOKEN
+    weight: 1
+
+  - id: used_cli
+    label: 调用了 agent_doc_draft.py（非手写 DocxXML）
+    weight: 3
+
+  - id: no_sync
+    label: 未使用 --sync 或 POST api-doc-sync
+    weight: 3
+
+  - id: both_modules
+    label: 对「商店」和「网络相关」各运行一次 CLI
+    weight: 3
+
+  - id: glob_awareness
+    label: 商店 glob 漏网时有提醒或说明 --apply-glob
+    weight: 2
+
+  - id: saved_json
+    label: JSON 保存到 eval/runs/{{MODEL_ID}}/s1-shop-protocol-test/
+    weight: 2
+
+  - id: agent_marker
+    label: docx_draft 含「agent生成，待审查」（由 CLI 自动生成）
+    weight: 1
