@@ -1,0 +1,10 @@
+# 复制为 orchestration.yaml 并填 true/false
+# 参见 eval/scenarios/s1-shop-protocol-test/checklist.yaml
+
+env_vars: false
+used_cli: false
+no_sync: false
+both_modules: false
+glob_awareness: false
+saved_json: false
+agent_marker: false
