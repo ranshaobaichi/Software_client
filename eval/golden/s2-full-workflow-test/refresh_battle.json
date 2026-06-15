@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "modules": [
+    "战斗"
+  ],
+  "skipped": [],
+  "count": 1,
+  "skipped_count": 0,
+  "scope": "战斗",
+  "force": true,
+  "log": "OK 战斗 -> /opt/api-sync/cache/snapshots/战斗.json"
+}

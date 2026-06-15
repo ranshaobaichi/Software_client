@@ -1,0 +1,37 @@
+# 编排 checklist — s2 四流程 eval
+items:
+  - id: env_vars
+    label: 设置了 API_SYNC_BASE / API_SYNC_TOKEN
+    weight: 1
+
+  - id: refresh_cache
+    label: 对「战斗」执行 POST /jobs/refresh-cache（建议 force）
+    weight: 2
+
+  - id: api_compare
+    label: 对「战斗」执行 POST /jobs/api-compare 并保存 compare_report.md
+    weight: 3
+
+  - id: align_code
+    label: 根据对比结果新建 BattleProtocolApiSync_Test.cs（文档→代码）
+    weight: 4
+
+  - id: doc_draft_cli
+    label: 对「商店」「网络相关」各运行 agent_doc_draft.py（Shop 测试文件）
+    weight: 3
+
+  - id: no_sync
+    label: 未使用 --sync 或 POST api-doc-sync
+    weight: 2
+
+  - id: glob_awareness
+    label: 商店 glob 漏网时有提醒（Shop 文件不在商店 glob）
+    weight: 2
+
+  - id: saved_artifacts
+    label: 产物保存到 eval/runs/{{MODEL_ID}}/s2-full-workflow-test/
+    weight: 2
+
+  - id: orchestration_format
+    label: orchestration.yaml 使用扁平 key true/false 格式
+    weight: 1

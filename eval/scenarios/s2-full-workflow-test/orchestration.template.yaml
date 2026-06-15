@@ -1,0 +1,11 @@
+# 复制为 orchestration.yaml 并填 true/false（扁平格式，勿用 items 列表）
+
+env_vars: false
+refresh_cache: false
+api_compare: false
+align_code: false
+doc_draft_cli: false
+no_sync: false
+glob_awareness: false
+saved_artifacts: false
+orchestration_format: false

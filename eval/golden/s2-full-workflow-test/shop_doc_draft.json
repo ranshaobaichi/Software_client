@@ -1,0 +1,58 @@
+{
+  "ok": true,
+  "module": "商店",
+  "repo": "client",
+  "paths": [
+    "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+  ],
+  "glob": {
+    "module": "商店",
+    "repo": "client",
+    "glob_key": "client_glob",
+    "in_glob": [],
+    "missing_from_glob": [
+      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+    ],
+    "skipped_auto_add": {},
+    "suggested_glob": [
+      "Assets/Scripts/Constants/NetworkConstants.cs",
+      "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs",
+      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs",
+      "Assets/Scripts/UI/States/BattleStates/ShopState.cs",
+      "Assets/Scripts/UI/ViewModels/ShopViewModels/ShopViewModel.cs"
+    ],
+    "needs_registry_update": true,
+    "registry_applied": false,
+    "registry_path": "config\\wiki-registry.yaml"
+  },
+  "user_action_required": "以下路径不在 glob 中：Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs。请运行 --apply-glob 或手动更新 wiki-registry.yaml 后核对",
+  "drafts": [
+    {
+      "target": "api_docs",
+      "classification": {
+        "classification": "conflict",
+        "sync_recommended": true,
+        "has_missing_in_code": true,
+        "has_missing_in_doc": true,
+        "has_type_conflict": false
+      },
+      "sync_recommended": true,
+      "files_changed": [
+        "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+      ],
+      "docx_draft": "<h2>ShopTestPriceQuote（agent生成，待审查）</h2><pre lang=\"TypeScript\"><code>ShopTestPriceQuote: {\n  itemId: string;\n  unitPrice: number;\n  shelfKind: shoptestshelfkind;\n};</code></pre><h2>ShopTestPurchaseRequest（agent生成，待审查）</h2><pre lang=\"TypeScript\"><code>ShopTestPurchaseRequest: {\n  uid: string;\n  itemId: string;\n  quantity: number;\n  quote: shoptestpricequote;\n};</code></pre>",
+      "skipped": false,
+      "api_doc_sync_body": {
+        "module": "商店",
+        "repo": "client",
+        "target": "api_docs",
+        "summary": "Agent draft 商店/api_docs (conflict)",
+        "files_changed": [
+          "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
+        ],
+        "docx_draft": "<h2>ShopTestPriceQuote（agent生成，待审查）</h2><pre lang=\"TypeScript\"><code>ShopTestPriceQuote: {\n  itemId: string;\n  unitPrice: number;\n  shelfKind: shoptestshelfkind;\n};</code></pre><h2>ShopTestPurchaseRequest（agent生成，待审查）</h2><pre lang=\"TypeScript\"><code>ShopTestPurchaseRequest: {\n  uid: string;\n  itemId: string;\n  quantity: number;\n  quote: shoptestpricequote;\n};</code></pre>"
+      }
+    }
+  ],
+  "sync_results": null
+}

@@ -85,6 +85,7 @@ Assets/TODO.md
 ########################
 
 .workspace/
+.cursor/plans/
 
 ########################
 # Specific to this project
@@ -92,3 +93,12 @@ Assets/TODO.md
 
 Assets/Resources/localize_data.json
 Assets/Resources/localize_data.json.meta
+
+########################
+# api-sync eval（测试协议与运行时产物）
+########################
+
+Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs
+Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs.meta
+Assets/Scripts/Network/NetModels/BattleProtocolApiSync_Test.cs
+Assets/Scripts/Network/NetModels/BattleProtocolApiSync_Test.cs.meta
