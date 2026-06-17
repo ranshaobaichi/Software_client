@@ -9,21 +9,25 @@
     "module": "网络相关",
     "repo": "client",
     "glob_key": "client_glob",
-    "in_glob": [
+    "in_glob": [],
+    "missing_from_glob": [
       "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
     ],
-    "missing_from_glob": [],
     "skipped_auto_add": {},
     "suggested_glob": [
-      "Assets/Scripts/Network/**/*.cs",
       "Assets/Scripts/Constants/NetworkConstants.cs",
-      "Assets/Scripts/SimpleNetworkClient2D.cs"
+      "Assets/Scripts/Network/LongConnectionDispatchTables.cs",
+      "Assets/Scripts/Network/LongConnectionInboundDispatcher.cs",
+      "Assets/Scripts/Network/MessageFramer.cs",
+      "Assets/Scripts/Network/MessageSerializer.cs",
+      "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs",
+      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
     ],
-    "needs_registry_update": false,
+    "needs_registry_update": true,
     "registry_applied": false,
     "registry_path": "config\\wiki-registry.yaml"
   },
-  "user_action_required": null,
+  "user_action_required": "以下路径不在 glob 中：Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs。请运行 --apply-glob 或手动更新 wiki-registry.yaml 后核对",
   "drafts": [
     {
       "target": "type_constraints",

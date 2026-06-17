@@ -62,6 +62,7 @@ def main() -> None:
         "",
         f"- 日期：{today}",
         f"- 场景：{'四流程 eval（真实 ECS，无 sync）' if is_s2 else '写回文档（真实 ECS，无 sync）'}",
+        "- 评分：准确性 50% + 完整性 30% + 规范性 20%",
     ]
     if is_s2:
         lines.append("- 流程：refresh → compare → align → doc draft")
@@ -76,12 +77,13 @@ def main() -> None:
 
     if is_s2:
         lines.append(
-            "| 模型 | 编排分 | refresh | compare | align | 商店 draft | 网络 draft | 总评 |"
+            "| 模型 | 总分 | 等级 | 准确性 | 完整性 | 规范性 | 编排分 | refresh | compare | align | 商店 | 网络 |"
         )
         lines.append(
-            "|------|--------|---------|---------|-------|------------|------------|------|"
+            "|------|------|------|--------|--------|--------|--------|---------|---------|-------|------|------|"
         )
         for model, sc in scores:
+            dims = sc.get("dimensions") or {}
             orch_pct = sc.get("orchestration", {}).get("pct", "-")
             steps = sc.get("steps") or {}
             mods = sc.get("modules") or {}
@@ -92,39 +94,64 @@ def main() -> None:
             a = "✓" if (steps.get("align") or {}).get("ok") else "✗"
             shop_d = "✓" if shop.get("ok") else "✗"
             net_d = "✓" if net.get("ok") else "✗"
-            overall = sc.get("overall", "?")
+            enc = steps.get("encoding") or {}
+            enc_note = " (编码已修复)" if enc.get("repaired") else ""
             lines.append(
-                f"| {model} | {orch_pct}% | {r} | {c} | {a} | {shop_d} | {net_d} | **{overall}** |"
+                f"| {model} | **{dims.get('total', '-')}** | {sc.get('overall', '?')} | "
+                f"{dims.get('accuracy', '-')} | {dims.get('completeness', '-')} | "
+                f"{dims.get('conformance', '-')}{enc_note} | {orch_pct}% | {r} | {c} | {a} | {shop_d} | {net_d} |"
             )
     else:
         lines.append(
-            "| 模型 | 编排分 | 结果 | 商店 glob | 商店 draft | 网络 glob | 网络 draft | 总评 |"
+            "| 模型 | 总分 | 等级 | 准确性 | 完整性 | 规范性 | 编排分 | 商店 | 网络 |"
         )
         lines.append(
-            "|------|--------|------|-----------|------------|-----------|------------|------|"
+            "|------|------|------|--------|--------|--------|--------|------|------|"
         )
         for model, sc in scores:
+            dims = sc.get("dimensions") or {}
             orch_pct = sc.get("orchestration", {}).get("pct", "-")
             mods = sc.get("modules") or {}
             shop = mods.get("商店") or {}
             net = mods.get("网络相关") or {}
-            shop_g = "✓" if (shop.get("glob") or {}).get("ok") else "✗"
-            net_g = "✓" if (net.get("glob") or {}).get("ok") else "✗"
             shop_d = "✓" if shop.get("ok") else "✗"
             net_d = "✓" if net.get("ok") else "✗"
-            res_ok = "✓" if sc.get("all_results_ok") else "✗"
-            overall = sc.get("overall", "?")
             lines.append(
-                f"| {model} | {orch_pct}% | {res_ok} | {shop_g} | {shop_d} | {net_g} | {net_d} | **{overall}** |"
+                f"| {model} | **{dims.get('total', '-')}** | {sc.get('overall', '?')} | "
+                f"{dims.get('accuracy', '-')} | {dims.get('completeness', '-')} | "
+                f"{dims.get('conformance', '-')} | {orch_pct}% | {shop_d} | {net_d} |"
             )
 
     if not scores:
-        lines.append("| _(无 runs)_ | | | | | | | |")
+        lines.append("| _(无 runs)_ | | | | | | | | | | | | |")
 
-    lines.extend(["", "## 编排明细", ""])
+    lines.extend(["", "## 维度说明", ""])
+    lines.extend(
+        [
+            "| 维度 | 权重 | 含义 |",
+            "|------|------|------|",
+            "| **准确性** | 50% | 产物与 golden/飞书预期的一致程度（refresh、compare 符号、align 类型、doc draft 符号与分类） |",
+            "| **完整性** | 30% | 必需产物是否齐全、编排 checklist 完成度 |",
+            "| **规范性** | 20% | UTF-8 落盘、orchestration 扁平格式、glob 门禁提醒等工程规范 |",
+            "",
+            "## 编排明细",
+            "",
+        ]
+    )
+
     for model, sc in scores:
         details = (sc.get("orchestration") or {}).get("details") or {}
         lines.append(f"### {model}")
+        dims = sc.get("dimensions") or {}
+        lines.append(
+            f"- 总分 **{dims.get('total', '-')}**（{sc.get('overall', '?')}）"
+            f" — 准确性 {dims.get('accuracy', '-')}"
+            f" / 完整性 {dims.get('completeness', '-')}"
+            f" / 规范性 {dims.get('conformance', '-')}"
+        )
+        enc = (sc.get("steps") or {}).get("encoding") or {}
+        if enc.get("repaired"):
+            lines.append("- compare 报告经打分脚本从 JSON `report_md` 修复 UTF-8（规范性扣分）")
         if not details:
             lines.append("- _(未填写 orchestration.yaml)_")
         else:
@@ -135,6 +162,13 @@ def main() -> None:
     lines.extend(["## 结果差异", ""])
     for model, sc in scores:
         lines.append(f"### {model}")
+        steps = sc.get("steps") or {}
+        for step_name in ("refresh", "compare", "align"):
+            step = steps.get(step_name) or {}
+            if step.get("error"):
+                lines.append(f"- **{step_name}**: {step['error']}")
+            elif step.get("ok") is False and step_name in steps:
+                lines.append(f"- **{step_name}**: 未通过")
         for mod_name, mod in (sc.get("modules") or {}).items():
             issues = (mod.get("compare") or {}).get("issues") or []
             if mod.get("error"):
@@ -149,7 +183,8 @@ def main() -> None:
 
     report_dir = client_root / "eval/reports"
     report_dir.mkdir(parents=True, exist_ok=True)
-    out_path = report_dir / f"report-{scenario}-{today}.md"
+    short_name = scenario.replace("s2-", "").replace("s1-", "")
+    out_path = report_dir / f"report-{short_name}-{today}.md"
     out_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Wrote {out_path}")
 

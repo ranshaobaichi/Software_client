@@ -17,9 +17,7 @@
     "suggested_glob": [
       "Assets/Scripts/Constants/NetworkConstants.cs",
       "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs",
-      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs",
-      "Assets/Scripts/UI/States/BattleStates/ShopState.cs",
-      "Assets/Scripts/UI/ViewModels/ShopViewModels/ShopViewModel.cs"
+      "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
     ],
     "needs_registry_update": true,
     "registry_applied": false,
