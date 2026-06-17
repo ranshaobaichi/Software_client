@@ -1,4 +1,6 @@
-runs/*/
+# runs：不纳入版本控制；切换分支时 Git 不会删除已忽略文件，本地产物会保留
+runs/**
 !runs/.gitkeep
+
 reports/*.md
 !reports/.gitkeep

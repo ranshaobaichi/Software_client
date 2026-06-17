@@ -3,7 +3,7 @@
 - 仓库：`client`（比对 **client** 方向文档块与代码）
 - 对比目标：`api_docs`
 - 文件数：4
-- 文档消息块：5
+- 文档消息块：4
 - 代码消息类型：30
 - scope 内类型数：37
 
@@ -13,7 +13,6 @@
 - **缺陷**：文档消息 `准备 (切换场景完成)::client::` 在代码中未找到对应类型
 - **缺陷**：文档消息 `位置同步::client::` 在代码中未找到对应类型
 - **缺陷**：文档消息 `攻击::client::` 在代码中未找到对应类型
-- **缺陷**：文档消息 `BattleTestActionRequest` 在代码中未找到对应类型
 - **缺陷**：代码类型 `SimpleNetworkClient2D` 在文档（同方向）中未描述
 - **缺陷**：代码类型 `ClientNetworkMessage` 在文档（同方向）中未描述
 - **缺陷**：代码类型 `NetworkErrorMessage` 在文档（同方向）中未描述
@@ -39,7 +38,8 @@
 - **缺陷**：代码类型 `ShopMoveCursorRequest` 在文档（同方向）中未描述
 - **缺陷**：代码类型 `ShopBuyRequest` 在文档（同方向）中未描述
 - **缺陷**：代码类型 `ShopSyncResponse` 在文档（同方向）中未描述
-- … 另有 5 条
+- **缺陷**：代码类型 `NetPlayer` 在文档（同方向）中未描述
+- … 另有 4 条
 
 ## 消息级对比
 
@@ -49,7 +49,6 @@
 | 准备 (切换场景完成) | client | 准备 (切换场景完成)::client:: | missing_in_code |  | 0 | 0 | 0 |
 | 位置同步 | client | 位置同步::client:: | missing_in_code |  | 0 | 0 | 0 |
 | 攻击 | client | 攻击::client:: | missing_in_code |  | 0 | 0 | 0 |
-| Eval战斗测试协议 | client | BattleTestActionRequest | missing_in_code |  | 0 | 0 | 0 |
 | SimpleNetworkClient2D | client | SimpleNetworkClient2D | missing_in_doc |  | 0 | 0 | 0 |
 | ClientNetworkMessage | client | ClientNetworkMessage | missing_in_doc |  | 0 | 0 | 0 |
 | NetworkErrorMessage | client | NetworkErrorMessage | missing_in_doc |  | 0 | 0 | 0 |

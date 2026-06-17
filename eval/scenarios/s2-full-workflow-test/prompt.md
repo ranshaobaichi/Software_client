@@ -12,7 +12,7 @@
 2. 在 PowerShell **自行**设置 ECS 环境变量（勿让用户手动）
 3. **禁止** `--sync`、`POST /jobs/api-doc-sync`
 4. **禁止**手写 DocxXML 代替 CLI
-5. 步骤 4 的 doc draft **必须**用 `agent_doc_draft.py`
+5. 步骤 1/2/4 **必须**用本仓 `eval/tools/write_eval_artifacts.py` 落盘（UTF-8，勿用 `Out-File` / `ConvertTo-Json` 写 JSON 或 compare 报告）
 6. 步骤 3 对齐代码：新建 `Assets/Scripts/Network/NetModels/BattleProtocolApiSync_Test.cs`（勿改其他业务文件）
 7. `orchestration.yaml` **必须**复制 `orchestration.template.yaml` 结构，只改 `true`/`false`
 
@@ -22,48 +22,30 @@
 
 ---
 
-## 步骤 1 — 刷新 ECS 缓存（战斗）
+## 步骤 0 — 设置 ECS 环境变量
 
 ```powershell
 $env:API_SYNC_BASE = "http://120.27.249.20"
 $env:API_SYNC_TOKEN = "ed7484c01552b1d3c271870a4c128bc7e1c0e5b92c732d33"
-$h = @{ Authorization = "Bearer $env:API_SYNC_TOKEN"; "Content-Type" = "application/json" }
-
-$outDir = "eval\runs\{{MODEL_ID}}\s2-full-workflow-test"
-New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-
-$refresh = Invoke-RestMethod -Method POST -Headers $h `
-  -Body '{"module":"战斗","force":true}' `
-  "$env:API_SYNC_BASE/jobs/refresh-cache"
-$refresh | ConvertTo-Json -Depth 6 | Out-File "$outDir\refresh_battle.json" -Encoding utf8
 ```
 
 ---
 
-## 步骤 2 — 对比文档与代码（战斗，只读报告）
+## 步骤 1 & 2 — 刷新缓存 + 对比文档与代码（战斗）
 
-收集战斗 `client_glob` 内文件 + `config/message_aliases.yaml` 全文，POST api-compare：
+**一条命令**完成 refresh-cache 与 api-compare，并写入 UTF-8 产物：
 
 ```powershell
-$root = (Get-Location).Path
-$paths = @(
-  "Assets/Scripts/SimpleNetworkClient2D.cs",
-  "Assets/Scripts/Network/NetModels/ServerNetworkMessages.cs",
-  "Assets/Scripts/Constants/NetworkConstants.cs",
-  "config/message_aliases.yaml"
-)
-$files = @{}
-foreach ($p in $paths) {
-  $full = Join-Path $root ($p -replace '/', '\')
-  $files[$p -replace '\\','/'] = [IO.File]::ReadAllText($full)
-}
-$body = @{ module = "战斗"; repo = "client"; files = $files; scoped = $true } | ConvertTo-Json -Depth 6 -Compress
-$compare = Invoke-RestMethod -Method POST -Headers $h -Body $body "$env:API_SYNC_BASE/jobs/api-compare"
-$compare | ConvertTo-Json -Depth 8 | Out-File "$outDir\compare_battle.json" -Encoding utf8
-($compare.report_md) | Out-File "$outDir\compare_report.md" -Encoding utf8
+python eval/tools/write_eval_artifacts.py ecs --model {{MODEL_ID}} --scenario s2-full-workflow-test
 ```
 
-向用户展示 `compare_report.md` 摘要（须含 Eval 协议符号缺失项）。
+产物路径：
+
+- `eval/runs/{{MODEL_ID}}/s2-full-workflow-test/refresh_battle.json`
+- `eval/runs/{{MODEL_ID}}/s2-full-workflow-test/compare_battle.json`
+- `eval/runs/{{MODEL_ID}}/s2-full-workflow-test/compare_report.md`
+
+向用户展示 `compare_report.md` 摘要（须含 Eval 协议在代码侧 missing_in_code）。
 
 ---
 
@@ -81,20 +63,14 @@ $compare | ConvertTo-Json -Depth 8 | Out-File "$outDir\compare_battle.json" -Enc
 
 ## 步骤 4 — 根据代码生成本地文档草稿（Shop 测试文件）
 
-中央仓：`../game-api-sync`
-
 ```powershell
-$central = Resolve-Path "..\game-api-sync"
-$shopPath = "Assets/Scripts/Network/NetModels/ShopProtocolApiSync_Test.cs"
-
-python "$central\scripts\agent_doc_draft.py" `
-  --module 商店 --repo client --paths $shopPath `
-  | Out-File "$outDir\shop_doc_draft.json" -Encoding utf8
-
-python "$central\scripts\agent_doc_draft.py" `
-  --module 网络相关 --repo client --paths $shopPath `
-  | Out-File "$outDir\network_doc_draft.json" -Encoding utf8
+python eval/tools/write_eval_artifacts.py doc-draft --model {{MODEL_ID}} --scenario s2-full-workflow-test
 ```
+
+产物：
+
+- `eval/runs/{{MODEL_ID}}/s2-full-workflow-test/shop_doc_draft.json`
+- `eval/runs/{{MODEL_ID}}/s2-full-workflow-test/network_doc_draft.json`
 
 Shop 文件 **不在** 商店 glob — 提醒用户核对 registry，**不要** 擅自 `--apply-glob`。
 

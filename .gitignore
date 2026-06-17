@@ -55,6 +55,7 @@ Thumbs.db
 ########################
 
 TestResults/
+CodeCoverage/
 .gradle/
 ExportedObj/
 ServerData/
