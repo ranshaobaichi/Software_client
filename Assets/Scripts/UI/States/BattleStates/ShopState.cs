@@ -61,7 +61,11 @@ public class ShopState : StateBase {
         NetworkManager.SInstance.RemoveConnection(m_channel);
         m_channel = null;
     }
-
+    
+    public void TEST_SwitchToBattle() {
+        GameSceneManager.SInstance.SwitchScene(SceneType.BATTLE);
+    }
+    
     #region ===== 发送 =====
 
     public void SendInit() {
