@@ -92,6 +92,8 @@ Assets/TODO.md
 # Specific to this project
 ########################
 
+Assets/Logs/
+Assets/Logs.meta
 Assets/Resources/localize_data.json
 Assets/Resources/localize_data.json.meta
 

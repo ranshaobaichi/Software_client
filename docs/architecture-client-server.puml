@@ -1,0 +1,136 @@
+@startuml client-server-architecture
+!theme plain
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title 客户端与服务端整体架构 (上层抽象)
+
+package "共享协议契约" as PkgContract #FFF8E1 {
+  component [传输层\nTCP + JSON + 行分隔] as TransportSpec
+  component [短连接信封\nShortEnvelope] as ShortEnv
+  component [长连接信封\nLongEnvelope] as LongEnv
+  component [领域命令\n登录 大厅 商店 地图 战斗] as DomainCmd
+}
+
+package "Unity 客户端" as PkgClient #E3F2FD {
+
+  package "表现与交互层" as PkgUI {
+    component [场景与页面\nLogin Home Battle] as Scenes
+    component [UI 状态机\nStateEngine Page] as StateEngine
+    component [MVVM 与 Dialog] as MVVM
+  }
+
+  package "业务流程层" as PkgBiz {
+    component [大厅流程\n登录 房间 准备] as LobbyFlow
+    component [关卡流程\n商店 地图 选点] as StageFlow
+    component [战斗流程\n就绪 同步 射击] as BattleFlow
+  }
+
+  package "客户端战斗" as PkgCBattle {
+    component [本地表现\n实体 输入 渲染] as LocalBattle
+    component [帧同步适配\n上报 插值 事件] as BattleSync
+  }
+
+  package "网络接入层" as PkgNet {
+    component [NetworkManager] as NetMgr
+    component [短连接通道] as ShortConn
+    component [长连接通道] as LongConn
+  }
+
+  component [数据与常量\nModels Enums] as ClientData
+}
+
+package "C++ 服务端" as PkgServer #E8F5E9 {
+
+  package "服务接入层" as PkgSvc {
+    component [LoginServer\n认证] as LoginSvc
+    component [HomeServer\n大厅与房间] as HomeSvc
+    component [ShopServer\n商店] as ShopSvc
+    component [MapServer\n地图] as MapSvc
+    component [BattleServer\n战斗与Tick] as BattleSvc
+  }
+
+  package "连接与分发" as PkgIO {
+    component [Channel\n读循环 分帧 回包] as Channel
+    component [命令分发\nShort Long] as Dispatch
+  }
+
+  package "领域模型" as PkgDomain {
+    component [ServerState\n用户与房间索引] as ServerState
+    component [Room 聚合根\n阶段状态机] as Room
+    component [User\n会话与归属] as User
+  }
+
+  package "权威逻辑" as PkgLogic {
+    component [商店与地图规则] as StageRules
+    component [战斗权威\n实体 碰撞 事件] as BattleAuth
+    component [Tick 驱动\n16ms 帧广播] as TickLoop
+  }
+
+  component [运行时配置\nserver.json 商店目录] as ServerConfig
+}
+
+' 客户端内部依赖
+Scenes --> StateEngine
+StateEngine --> MVVM
+StateEngine --> LobbyFlow
+StateEngine --> StageFlow
+StateEngine --> BattleFlow
+BattleFlow --> LocalBattle
+BattleFlow --> BattleSync
+LobbyFlow --> NetMgr
+StageFlow --> NetMgr
+BattleFlow --> NetMgr
+NetMgr --> ShortConn
+NetMgr --> LongConn
+ShortConn ..> ClientData
+LongConn ..> ClientData
+
+' 服务端内部依赖
+LoginSvc --> Channel
+HomeSvc --> Channel
+ShopSvc --> Channel
+MapSvc --> Channel
+BattleSvc --> Channel
+Channel --> Dispatch
+Dispatch --> Room
+Dispatch --> ServerState
+Room --> User
+Room --> StageRules
+Room --> BattleAuth
+BattleSvc --> TickLoop
+TickLoop --> BattleAuth
+TickLoop --> Room
+ServerConfig ..> ServerState
+ServerConfig ..> StageRules
+
+' 跨端通信
+ShortConn --> TransportSpec
+LongConn --> TransportSpec
+TransportSpec --> Channel
+ShortConn ..> ShortEnv
+LongConn ..> LongEnv
+Dispatch ..> DomainCmd
+ClientData ..> DomainCmd
+
+note right of Room
+  Room 阶段状态机 (服务端权威)
+  LOBBY -> SHOP -> MAP -> BATTLE -> END
+  客户端业务状态通过长连接跟随
+end note
+
+note bottom of PkgSvc
+  多端口单进程
+  Auth Lobby Shop Map Battle
+  共享 ServerState
+end note
+
+legend right
+  实线 = 依赖关系
+  虚线 = 契约或配置
+  上层抽象视图
+endlegend
+
+@enduml
